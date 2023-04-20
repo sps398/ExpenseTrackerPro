@@ -1,8 +1,9 @@
 const signUpForm = document.getElementById('signup-form');
-const signInForm = document.getElementById('signin-form');
+const nameInput = document.getElementById('name');
 const emailInput = document.getElementById('email');
 const passwordInput = document.getElementById('password');
 const alertText = document.getElementById('alert-text');
+// import { setAlert } from './alert.js';
 
 const axiosInstance = axios.create({
     baseURL: 'http://localhost:3000'
@@ -10,8 +11,6 @@ const axiosInstance = axios.create({
 
 signUpForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-
-    const nameInput = document.getElementById('name');
 
     const user = {
         name: nameInput.value,
@@ -23,22 +22,6 @@ signUpForm.addEventListener('submit', async (e) => {
         const result = await axiosInstance.post('/user/signup', user);
         setAlert(result, signUpForm, "Some error occured!", "You are registered succesfully!");
         
-    } catch(err) {
-        console.log(err);
-    }
-});
-
-signInForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    const user = {
-        name: nameInput.value,
-        password: passwordInput.value
-    };
-
-    try {
-        const result = await axiosInstance.post('/user/signin', user);
-        setAlert(result, signInForm, "Some error occurred!", "You are logged in succesfully!");
     } catch(err) {
         console.log(err);
     }
@@ -65,4 +48,4 @@ function setAlert(result, form, alertTextFail, alertTextPass) {
     setTimeout(() => {
         alertText.hidden = "hidden";
     }, 5000);
-}
+};
