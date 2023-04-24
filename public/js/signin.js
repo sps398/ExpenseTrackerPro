@@ -19,6 +19,7 @@ signInForm.addEventListener('submit', async (e) => {
         const result = await axiosInstance.post('/user/signin', user);
         if(result.data.success) {
             setAlert(result);
+            localStorage.setItem('token', result.data.token);
             setTimeout(() => {
                 window.location = 'file:///D:/Projects/Web/ExpenseTracker/views/expense.html';
             }, 3000);
