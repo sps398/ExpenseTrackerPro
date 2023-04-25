@@ -13,6 +13,6 @@ router.post('/add-expense', userAuthentication.authenticate, expenseController.p
 
 // deleteExpense
 
-router.post('/delete-expense/:expenseId', userAuthentication.authenticate, expenseController.postDeleteExpense);
+router.post('/delete-expense/', userAuthentication.authenticate, expenseController.postDeleteExpense);
 
 module.exports = router;

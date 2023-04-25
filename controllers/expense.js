@@ -32,7 +32,7 @@ module.exports.postAddExpense = async (req, res, next) => {
 
 module.exports.postDeleteExpense = async (req, res, next) => {
     try {
-        const expenses = await req.user.getExpenses({ where: { id: req.params.expenseId }});
+        const expenses = await req.user.getExpenses({ where: { id: req.body.expenseId }});
         const expense = expenses[0];
         const result = await expense.destroy();
         return res.status(200).json({ success: true });
