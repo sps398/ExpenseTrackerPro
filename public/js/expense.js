@@ -9,6 +9,8 @@ const myModal = document.getElementById('addExpenseModal');
 const premBtnC = document.getElementById('prembtnc');
 const premBtn = document.getElementById('prembtn');
 let content = document.getElementById('content');
+let premTextC = document.getElementById('premtextc');
+const showLB = document.getElementById('showleaderboardbtn');
 
 const axiosInstance = axios.create({
     baseURL: 'http://localhost:3000'
@@ -39,17 +41,30 @@ form.addEventListener('submit', async (e) => {
 });
 
 async function render() {
-    let result;
+    let result, token;
     try {
-        const token = localStorage.getItem('token');
+        token = localStorage.getItem('token');
         result = await axiosInstance.get('/expenses', { headers: { "Authorization": token} });
     } catch(err) {
         console.log(err);
     }
 
-    console.log(result);
-
     const expenses = result.data.expenses;
+
+    const user = decodeToken(token);
+    const isPremium = user.isPremium;
+    
+    if(isPremium) {
+        premBtnC.style.display = 'none';
+        premTextC.style.display = 'block';
+        
+        showLB.style.display = 'block';
+
+        showLB.onclick = function(e) {
+            window.location = 'file:///D:/Projects/Web/ExpenseTracker/views/dashboard/leaderboard.html';
+        }
+    }
+
     content.innerHTML = "";
 
     if(expenses.length == 0) {
@@ -87,6 +102,16 @@ async function render() {
 
 }
 
+function decodeToken(token) {
+    var base64Url = token.split('.')[1];
+    var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    var jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+
+    return JSON.parse(jsonPayload);
+}
+
 async function deleteExpense(id) {
     const token = localStorage.getItem('token');
     await axiosInstance.post(`/delete-expense`, { expenseId: id }, { headers: { "Authorization": token} });
@@ -109,14 +134,18 @@ premBtn.onclick = async function(e) {
         "key": response.data.key_id,
         "order_id": response.data.order.id,
         "handler": async function(response) {
-            await axiosInstance.post('http://localhost:3000/purchase/updatetransactionstatus', {
+            const result = await axiosInstance.post('http://localhost:3000/purchase/updatetransactionstatus', {
                 order_id: options.order_id,
                 payment_id: response.razorpay_payment_id
             }, { headers: { 'Authorization': token } });
 
             alert('You are premium user now.');
 
-            premBtnC.style.display = 'none';
+            console.log(result.data);
+
+            localStorage.setItem('token', result.data.token);
+
+            render();
         }
     };
 
@@ -130,6 +159,7 @@ premBtn.onclick = async function(e) {
                 order_id: options.order_id,
                 payment_id: response.razorpay_payment_id
             }, { headers: { 'Authorization': token } });
+            
         alert("Something went wrong!");
     });
 }

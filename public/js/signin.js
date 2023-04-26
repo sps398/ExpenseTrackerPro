@@ -21,8 +21,8 @@ signInForm.addEventListener('submit', async (e) => {
             setAlert(result);
             localStorage.setItem('token', result.data.token);
             setTimeout(() => {
-                window.location = 'file:///D:/Projects/Web/ExpenseTracker/views/expense.html';
-            }, 3000);
+                window.location = 'file:///D:/Projects/Web/ExpenseTracker/views/dashboard/expense.html';
+            }, 2000);
         }
 
     } catch(err) {
