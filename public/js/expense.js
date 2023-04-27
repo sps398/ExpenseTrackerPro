@@ -161,5 +161,7 @@ premBtn.onclick = async function(e) {
             }, { headers: { 'Authorization': token } });
             
         alert("Something went wrong!");
+
+        render();
     });
 }
