@@ -1,3 +1,5 @@
+global.__basedir = __dirname;
+
 const bodyParser = require('body-parser');
 const userRoutes = require('./routes/user');
 const dashboardRoutes = require('./routes/dashboard');
@@ -9,12 +11,17 @@ const path = require('path');
 const cors = require('cors');
 const Expense = require('./models/expense');
 const User = require('./models/user');
+const ForgotPasswordRequests = require('./models/forgotpasswordrequest');
 const Order = require('./models/order');
 const Razorpay = require('razorpay');
+const jade = require('ejs');
 require('dotenv').config();
+
 
 const app = express();
 
+app.set('view engine', 'ejs');
+app.set('views', path.join(__basedir, 'views', '/auth'));
 app.use(bodyParser.json({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(cors());
@@ -29,6 +36,9 @@ Expense.belongsTo(User);
 
 User.hasMany(Order);
 Order.belongsTo(User);
+
+User.hasMany(ForgotPasswordRequests);
+ForgotPasswordRequests.belongsTo(User);
 
 sequelize
     // .sync({ force: true })
