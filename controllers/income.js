@@ -1,4 +1,4 @@
-const Expense = require('../models/expense');
+const Income = require('../models/income');
 const User = require('../models/user');
 const sequelize = require('../util/database');
 const UserServices = require('../services/userservices');
@@ -7,34 +7,29 @@ const FilesDownloaded = require('../models/filesdownloaded');
 const AWS = require('aws-sdk');
 require('dotenv').config();
 
-// getExpenses
-
-const getExpenses = async (req, res, next) => {
+const getIncomes = async (req, res, next) => {
     try {
-        const expenses = await UserServices.getExpenses(req);
-        return res.status(200).json({ expenses: expenses, success: true });
+        const incomes = await req.user.getIncomes(req);
+        return res.status(200).json({ incomes: incomes, success: true });
     } catch (err) {
         console.log(err);
         return res.status(500).json({ message: "Some error occurred", success: false });
     }
 }
 
-// postAddExpense
-
-const postAddExpense = async (req, res, next) => {
+const postAddIncome = async (req, res, next) => {
     const t = await sequelize.transaction();
 
     try {
         const user = req.user;
         
-        await user.createExpense({
+        await req.user.createIncome({
             amount: req.body.amount,
             description: req.body.description,
-            category: req.body.category,
             date: req.body.date
-        }, { transaction: t });
+        });
 
-        user.totalExpense = Number(user.totalExpense) + Number(req.body.amount);
+        user.totalIncome = Number(user.totalIncome) + Number(req.body.amount);
 
         await user.save({ transaction: t });
 
@@ -48,23 +43,21 @@ const postAddExpense = async (req, res, next) => {
     }
 }
 
-// postDeleteExpense
-
-const postDeleteExpense = async (req, res, next) => {
+const postDeleteIncome = async (req, res, next) => {
     const t = await sequelize.transaction();
     try {
-        const expenseId = req.body.expenseId;
-        if (expenseId == undefined || expenseId.length === 0)
+        const incomeId = req.body.incomeId;
+        if (incomeId == undefined || incomeId.length === 0)
             return res.status(400).json({ message: 'Bad request', success: false });
         
         const user = req.user;
         
-        const expenses = await user.getExpenses({ where: { id:expenseId } });
-        const expense = expenses[0];
+        const incomes = await user.getIncomes({ where: { id:incomeId } });
+        const income = incomes[0];
 
-        await expense.destroy({ transaction: t });
+        await income.destroy({ transaction: t });
 
-        user.totalExpense = Number(user.totalExpense) - Number(expense.amount);
+        user.totalIncome = Number(user.totalIncome) - Number(income.amount);
 
         await user.save({ transaction: t });
 
@@ -78,13 +71,13 @@ const postDeleteExpense = async (req, res, next) => {
     }
 }
 
-const downloadExpenses = async (req, res) => {
+const downloadIncomes = async (req, res) => {
     try {
-        const expenses = await UserServices.getExpenses(req);
-        const stringifiedExpenses = JSON.stringify(expenses);
+        const incomes = await UserServices.getIncomes(req);
+        const stringifiedIncomes = JSON.stringify(incomes);
         const dateDownloaded = new Date();
-        const filename = `Expense${req.user.id}/${dateDownloaded}.txt`;
-        const fileUrl = await S3Services.uploadToS3(stringifiedExpenses, filename);
+        const filename = `Income${req.user.id}/${dateDownloaded}.txt`;
+        const fileUrl = await S3Services.uploadToS3(stringifiedIncomes, filename);
 
         await FilesDownloaded.create({
             fileUrl: fileUrl,
@@ -98,10 +91,9 @@ const downloadExpenses = async (req, res) => {
         return res.status(500).json({ fileUrl: '', success: false, err: err });
     }
 }
-    
+
 module.exports = {
-    getExpenses,
-    postAddExpense,
-    postDeleteExpense,
-    downloadExpenses
+    getIncomes,
+    postAddIncome,
+    postDeleteIncome
 }

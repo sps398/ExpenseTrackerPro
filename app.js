@@ -11,7 +11,9 @@ const path = require('path');
 const cors = require('cors');
 const Expense = require('./models/expense');
 const User = require('./models/user');
+const Income = require('./models/income');
 const ForgotPasswordRequests = require('./models/forgotpasswordrequest');
+const FilesDownloaded = require('./models/filesdownloaded');
 const Order = require('./models/order');
 const Razorpay = require('razorpay');
 const jade = require('ejs');
@@ -40,8 +42,15 @@ Order.belongsTo(User);
 User.hasMany(ForgotPasswordRequests);
 ForgotPasswordRequests.belongsTo(User);
 
+User.hasMany(FilesDownloaded);
+FilesDownloaded.belongsTo(User);
+
+User.hasMany(Income);
+Income.belongsTo(User);
+
 sequelize
     // .sync({ force: true })
+    // .sync({alter:true})
     .sync()
     .then(result => {
         app.listen(3000);

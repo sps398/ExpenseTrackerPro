@@ -2,7 +2,7 @@ const Sequelize = require('sequelize');
 
 const sequelize = require('../util/database');
 
-const Expense = sequelize.define('expenses', {
+const Income = sequelize.define('incomes', {
     id: {
         type: Sequelize.INTEGER,
         autoIncrement: true,
@@ -17,14 +17,10 @@ const Expense = sequelize.define('expenses', {
         type: Sequelize.STRING,
         allowNull: false
       },
-      category: {
-        type: Sequelize.STRING,
-        allowNull: false
-      },
       date: {
-        type: Sequelize.DATEONLY,
+        type: Sequelize.DATE,
         allowNull: false
       }
 });
 
-module.exports = Expense;
+module.exports = Income;
