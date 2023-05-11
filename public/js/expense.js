@@ -4,33 +4,29 @@ const expense = document.getElementById('expense');
 const income = document.getElementById('income');
 const expenseDesc = document.getElementById('expense-desc');
 const incomeDesc = document.getElementById('income-desc');
-const type = document.getElementById('type');
+const expenseType = document.getElementById('expensetype');
+const incomeType = document.getElementById('incometype');
 const expenseDate = document.getElementById('expense-date');
 const incomeDate = document.getElementById('income-date');
 const expenseId = document.getElementById('id');
 const submitBtn = document.getElementById('submit-btn');
 const myModal = document.getElementById('addExpenseModal');
-const premBtnC = document.getElementById('prembtnc');
-const premBtn = document.getElementById('prembtn');
-const downloadFileBtn = document.getElementById('downloadfile');
-const expensesTable = document.getElementById('expenses-table');
-const expensesTableBody = document.getElementById('expenses-table-body');
 const reportTypeBtn = document.getElementById('report-type-btn');
+const downloadFileBtn = document.getElementById('downloadfile');
 const content = document.getElementById('content');
 const items = document.getElementsByClassName('item');
 const itemsArr = Array.from(items);
-let token, expenses;
+let entries;
+const incomeRowColor = '#a2ddd5';
+
+let page;
 
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-const axiosInstance = axios.create({
-    baseURL: 'http://localhost:3000'
-});
-
 window.addEventListener('DOMContentLoaded', () => {
-    token = localStorage.getItem('token');
-    renderPremiumFeatures();
+    downloadFileBtn.onclick = downloadFile;
     reportTypeBtn.innerText = 'Daily';
+    page=1;
     renderDaily();
 });
 
@@ -39,6 +35,8 @@ itemsArr.forEach(item => {
         const reportType = e.target.innerText;
         reportTypeBtn.innerText = reportType;
 
+        page=1;
+        
         switch (reportType) {
             case 'Daily':
                 renderDaily();
@@ -51,11 +49,66 @@ itemsArr.forEach(item => {
                 break;
             case 'All':
                 renderAll();
-            default:
-                renderNone();
         }
     });
 })
+
+function renderData(view) {
+    switch (view) {
+        case 'Daily':
+            renderDataDaily();
+            break;
+        case 'Monthly':
+            renderDataMonthly();
+            break;
+        case 'Yearly':
+            renderDataYearly();
+            break;
+        case 'All':
+            renderAll();
+    }
+}
+
+function addPaginationBtns(data, view) {
+    const btnsC = document.createElement('div');
+    btnsC.id='btnsC';
+    btnsC.style.display = 'inline-block';
+    btnsC.className = 'w-25 d-flex justify-content-center align-items-center m-auto mt-5';
+
+    if(data.hasPreviousPage) {
+        const btn2 = document.createElement('button');
+        btn2.innerHTML = data.previousPage;
+        btn2.addEventListener('click', (e) => {
+            page=e.target.innerHTML;
+            renderData(view);
+        });
+        btnsC.appendChild(btn2);
+    }
+
+    const btn1 = document.createElement('button');
+    btn1.innerHTML = data.currentPage;
+    btn1.className = 'mx-2 bg-dark text-white';
+
+    btn1.addEventListener('click', (e) => {
+        page=e.target.innerHTML;
+        renderData(view);
+    });
+    btnsC.appendChild(btn1);
+
+    console.log(data.hasNextPage);
+
+    if(data.hasNextPage) {
+        const btn3 = document.createElement('button');
+        btn3.innerHTML = data.nextPage;
+        btn3.addEventListener('click', (e) => {
+            page=e.target.innerHTML;
+            renderData(view);
+        });
+        btnsC.appendChild(btn3);
+    }
+
+    content.appendChild(btnsC);
+}
 
 formAddExpense.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -63,47 +116,54 @@ formAddExpense.addEventListener('submit', async (e) => {
     const newExpense = {
         amount: expense.value,
         description: expenseDesc.value,
-        category: type.value,
-        date: expenseDate.value
-    }
+        category: expenseType.value,
+        date: expenseDate.value,
+        entryType: 'expense'
+    };
 
-    try {
-        await axiosInstance.post('/add-expense', newExpense, { headers: { "Authorization": token } });
-    } catch (err) {
-        console.log(err);
-    }
-
-    formAddExpense.reset();
-    expenses = await getAllExpenses();
-    renderDataMonthly();
+    postEntryAndUpdate(newExpense, formAddExpense);
 });
 
 formAddIncome.addEventListener('submit', async (e) => {
     e.preventDefault();
 
+    console.log(incomeType.value);
+
     const newIncome = {
         amount: income.value,
+        category: incomeType.value,
         description: incomeDesc.value,
-        date: incomeDate.value
-    }
+        date: incomeDate.value,
+        entryType: 'income'
+    };
 
-    try {
-        await axiosInstance.post('/add-income', newIncome, { headers: { "Authorization": token } });
-    } catch (err) {
-        console.log(err);
-    }
-
-    formAddIncome.reset();
-    render();
+    postEntryAndUpdate(newIncome, formAddIncome);
 })
 
+async function postEntryAndUpdate(data, form) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            await axiosInstance.post('/add-entry', data, { headers: { "Authorization": token } });
+            form.reset();
+            page=1;
+            renderDaily();
+            resolve();
+        } catch (err) {
+            console.log(err);
+            reject();
+        }
+    })
+}
+
 async function renderDaily() {
+    reportTypeBtn.innerText = 'Daily';
+
     const curr = new Date();
     let currMonth = curr.getMonth() + 1;
-    let currDate = curr.getDay();
+    let currDate = curr.getDate();
     if (currMonth < 10)
         currMonth = '0' + currMonth;
-    if(currDate < 10)
+    if (currDate < 10)
         currDate = '0' + currDate;
 
     content.innerHTML = `
@@ -113,17 +173,17 @@ async function renderDaily() {
                         <input type="date" min="2010-01-01" max="2050-12-01" value="${curr.getFullYear()}-${currMonth}-${currDate}" class="w-auto ms-2" id="dateInput">
                         <button class="btn btn-primary ms-2" id="search">Search</button>
                 </div>
-                    <table id="expenses-table" class="table text-white table-hover table-bordered">
+                <div class="mt-4 mb-3" style="margin:0;padding:0;"><h5 id="data-title"></h5></div>
+                    <table id="entries-table" class="table text-white table-hover table-bordered">
                         <thead class="mb-5" style="font-family: 'Exo 2', sans-serif;background-color: rgb(32,144,158)">
                             <tr class="mt-5">
-                                <th class="title col-2">Date (yyyy/mm/dd)</th>
                                 <th class="title col-2">Category</th>
                                 <th class="title col-4">Description</th>
                                 <th class="title col-2">Income</th>
                                 <th class="title col-2">Expense</th>
                             </tr>
                         </thead>
-                        <tbody id="expenses-table-body" class="body text-dark">
+                        <tbody id="entries-table-body" class="body text-dark">
                         </tbody>
                     </table>
         </div>
@@ -136,59 +196,77 @@ async function renderDaily() {
 }
 
 async function renderDataDaily() {
-    try {
-        expenses = await getAllExpenses();
-    } catch(err) {
-        alert('Something went wrong!');
-        return;
-    }
+    if(document.getElementById('btnsC'))
+        document.getElementById('btnsC').remove();
 
     let dateInput = document.getElementById('dateInput').value;
     dateInput = new Date(dateInput);
 
-    const filteredExpenses = expenses.filter(expense => {
-        const date = new Date(expense.date);
-        return (date.getFullYear() === dateInput.getFullYear()) && (date.getMonth() === dateInput.getMonth()) && (date.getDate() === dateInput.getDate());
-    });
+    document.getElementById('data-title').innerHTML = `${dateInput.getDate()} ${months[dateInput.getMonth()]} ${dateInput.getFullYear()}`;
 
-    const tableBody = document.getElementById('expenses-table-body');
-    const expensesTable = document.getElementById('expenses-table');
-    let totalIncome = 0, totalExpense = 0, totSavings = 0;
+    let responseData, pageData;
+    try {
+         responseData = await getAllEntries(`date=${dateInput}`);
+         entries = responseData.entries;
+         pageData = responseData.pageData;
+    } catch (err) {
+        alert('Something went wrong!');
+        return;
+    }
+
+    const tableBody = document.getElementById('entries-table-body');
+    const entriesTable = document.getElementById('entries-table');
+    let totalIncome = 0, totalExpense = 0;
 
     tableBody.innerHTML = '';
 
-    filteredExpenses.forEach(expense => {
+    entries.forEach(entry => {
+        let currIncome, currExpense, bgColor;
+
+        if (entry.entryType === 'expense') {
+            currExpense = entry.amount;
+            totalExpense += currExpense;
+            currIncome = '--';
+            bgColor = '#C4C4C4';
+        }
+        else {
+            currIncome = entry.amount;
+            totalIncome += currIncome;
+            currExpense = '--';
+            bgColor = incomeRowColor;
+        }
+
         tableBody.innerHTML += `
-            <tr style="background-color: #C4C4C4;">
-                <td class="data col-2">${expense.date}</td>
-                <td class="data col-2">${expense.category}</td>
-                <td class="data col-4">${expense.description}</td>
-                <td class="income col-2">--</td>
-                <td class="expense col-2">${expense.amount}</td>
+            <tr style="background-color: ${bgColor};">
+                <td class="data col-2">${entry.category}</td>
+                <td class="data col-4">${entry.description}</td>
+                <td class="income col-2">${currIncome}</td>
+                <td class="expense col-2">${currExpense}</td>
             </tr>
         `;
-        totalExpense += expense.amount;
     })
 
     tableBody.innerHTML += `
         <tr class="total">
-            <td class="col-2"></td>
-            <td class="col-2"></td>
+            <td class="col-2">Total</td>
             <td class="col-4"></td>
-            <td class="income col-2">&#8377;0</td>
+            <td class="income col-2">&#8377;${totalIncome}</td>
             <td class="expense col-2">&#8377;${totalExpense}</td>
         </tr>
         <tr class="total">
             <td class="col-2"></td>
-            <td class="col-2"></td>
             <td class="col-4"></td>
             <td class="col-2"></td>
-            <td class="savings col-2">Savings=&#8377;0</td>
+            <td class="savings col-2">Savings=&#8377;${totalIncome - totalExpense}</td>
         </tr>
     `;
+
+    addPaginationBtns(pageData, 'Daily');
 }
 
 async function renderMonthly() {
+    reportTypeBtn.innerText = 'Monthly';
+
     content.innerHTML = '';
 
     const curr = new Date();
@@ -200,10 +278,11 @@ async function renderMonthly() {
     <div class="container mb-4 d-flex flex-column justify-content-center align-items-center position-relative">
                 <div class="d-flex mb-3">
                         <label for="dateInput" style="font-weight: bold;">Select month:</label>
-                        <input type="month" min="2010-01" max="2050-12" value="${curr.getFullYear()}-${currMonth}" class="w-auto ms-2" id="dateInput">
+                        <input type="month" min="2010-01" max="2050-12" value="${curr.getFullYear()}-${currMonth}" class="w-auto ms-2" id="monthInput">
                         <button class="btn btn-primary ms-2" id="search">Search</button>
                 </div>
-                    <table id="expenses-table" class="table text-white table-hover table-bordered">
+                <div class="mt-3 mb-3" style="margin:0;padding:0;"><h5 id="data-title"></h5></div>
+                    <table id="entries-table" class="table text-white table-hover table-bordered">
                         <thead class="mb-5" style="font-family: 'Exo 2', sans-serif;background-color: rgb(32,144,158)">
                             <tr class="mt-5">
                                 <th class="title col-2">Date (yyyy/mm/dd)</th>
@@ -213,14 +292,13 @@ async function renderMonthly() {
                                 <th class="title col-2">Expense</th>
                             </tr>
                         </thead>
-                        <tbody id="expenses-table-body" class="body text-dark">
+                        <tbody id="entries-table-body" class="body text-dark">
                         </tbody>
                     </table>
         </div>
     `;
 
     document.getElementById('search').addEventListener('click', (e) => {
-        // console.log();
         renderDataMonthly();
     });
 
@@ -228,42 +306,66 @@ async function renderMonthly() {
 }
 
 async function renderDataMonthly() {
-    const tableBody = document.getElementById('expenses-table-body');
-    const expensesTable = document.getElementById('expenses-table');
-    let totalIncome = 0, totalExpense = 0, totSavings = 0;
+    if(document.getElementById('btnsC'))
+        document.getElementById('btnsC').remove();
 
-    expenses = await getAllExpenses();
-    expenses.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    const tableBody = document.getElementById('entries-table-body');
+    const entriesTable = document.getElementById('entries-table');
+    let totalIncome = 0, totalExpense = 0;
+
+    const date = new Date(document.getElementById('monthInput').value);
+    const month = date.getMonth();
+    const year = date.getFullYear();
+
+    console.log(date);
+
+    document.getElementById('data-title').innerHTML = `${months[month]} ${year}`;
+
+    let responseData, pageData;
+    try {
+         responseData = await getAllEntries(`month=${month}`);
+         entries = responseData.entries;
+         pageData = responseData.pageData;
+    } catch(err) {
+        console.log(err);
+    }
+    entries.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
     tableBody.innerHTML = '';
 
-    const date = document.getElementById('dateInput').value;
-    const month = new Date(date).getMonth();
-    const year = new Date(date).getFullYear();
+    entries.forEach(entry => {
+        let currIncome, currExpense, bgColor;
 
-    const filteredExpenses = expenses.filter(expense => {
-        return new Date(expense.date).getMonth() === month && new Date(expense.date).getFullYear() === year;
-    });
+        if (entry.entryType === 'expense') {
+            currExpense = entry.amount;
+            totalExpense += currExpense;
+            currIncome = '--';
+            bgColor = '#C4C4C4';
+        }
+        else {
+            currIncome = entry.amount;
+            totalIncome += currIncome;
+            currExpense = '--';
+            bgColor = incomeRowColor;
+        }
 
-    filteredExpenses.forEach(expense => {
         tableBody.innerHTML += `
-            <tr style="background-color: #C4C4C4;">
-                <td class="data col-2">${expense.date}</td>
-                <td class="data col-2">${expense.category}</td>
-                <td class="data col-4">${expense.description}</td>
-                <td class="income col-2">--</td>
-                <td class="expense col-2">${expense.amount}</td>
+            <tr style="background-color: ${bgColor};">
+                <td class="data col-2">${entry.date}</td>
+                <td class="data col-2">${entry.category}</td>
+                <td class="data col-4">${entry.description}</td>
+                <td class="income col-2">${currIncome}</td>
+                <td class="expense col-2">${currExpense}</td>
             </tr>
         `;
-        totalExpense += expense.amount;
     })
 
     tableBody.innerHTML += `
         <tr class="total">
-            <td class="col-2"></td>
+            <td class="col-2">Total</td>
             <td class="col-2"></td>
             <td class="col-4"></td>
-            <td class="income col-2">&#8377;0</td>
+            <td class="income col-2">&#8377;${totalIncome}</td>
             <td class="expense col-2">&#8377;${totalExpense}</td>
         </tr>
         <tr class="total">
@@ -271,12 +373,16 @@ async function renderDataMonthly() {
             <td class="col-2"></td>
             <td class="col-4"></td>
             <td class="col-2"></td>
-            <td class="savings col-2">Savings=&#8377;0</td>
+            <td class="savings col-2">Savings=&#8377;${totalIncome - totalExpense}</td>
         </tr>
     `;
+    
+    addPaginationBtns(pageData, 'Monthly');
 }
 
 function renderYearly() {
+    reportTypeBtn.innerText = 'Yearly';
+
     content.innerHTML = '';
 
     content.innerHTML = `
@@ -286,7 +392,8 @@ function renderYearly() {
             <input type="number" min="2010" max="2023" value="${new Date().getFullYear()}" class="w-auto ms-2" id="yearInput">
             <button class="btn btn-primary ms-2" id="search">Search</button>
         </div>
-        <table id="expenses-table" class="table text-white table-hover table-bordered">
+        <div class="mt-3 mb-3" style="margin:0;padding:0;"><h5 id="data-title"></h5></div>
+        <table id="entries-table" class="table text-white table-hover table-bordered">
         <thead class="mb-5" style="font-family: 'Exo 2', sans-serif;background-color: rgb(32,144,158)">
             <tr class="title mt-5">
                 <th class="col-2">Month</th>
@@ -295,7 +402,7 @@ function renderYearly() {
                 <th class="col-4">Savings</th>
             </tr>
         </thead>
-        <tbody id="expenses-table-body" class="text-dark">
+        <tbody id="entries-table-body" class="text-dark">
         </tbody>
         </table>
     </div>
@@ -309,75 +416,105 @@ function renderYearly() {
 }
 
 async function renderDataYearly() {
+    if(document.getElementById('btnsC'))
+        document.getElementById('btnsC').remove();
+
     const yearInput = document.getElementById('yearInput').value;
-    console.log(yearInput);
     const date = new Date();
-    if(yearInput > date.getFullYear() || yearInput < 2010) {
+    if (yearInput > date.getFullYear() || yearInput < 2010) {
         alert(`Enter year between 2010 and ${date.getFullYear()}`);
         return;
     }
 
-        expenses = await getAllExpenses();
-        expenses.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        
-        const expensesTable = document.getElementById('expenses-table');
-        const tableBody = document.getElementById('expenses-table-body');
-        let totalIncome = 0, totalExpense = 0, totSavings = 0;
+    document.getElementById('data-title').innerHTML = `${yearInput}`;
 
-        tableBody.innerHTML = '';
+    let responseData, pageData;
+    try {
+         responseData = await getAllEntries(`year=${yearInput}`);
+         entries = responseData.entries;
+         pageData = responseData.pageData;
+    } catch(err) {
+        console.log(err);
+    }
 
-        const expensesByMonths = getExpensesByMonths(expenses, yearInput);
-    // console.log(expensesByMonths);
+    entries.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-    expensesByMonths.forEach((value, key) => {
-        console.log(key + " " + value);
-        currMonth = new Date(expense.date).getMonth()+1;
-            tableBody.innerHTML += `
+    const entriesTable = document.getElementById('entries-table');
+    const tableBody = document.getElementById('entries-table-body');
+    let totalIncome = 0, totalExpense = 0;
+
+    tableBody.innerHTML = '';
+
+    const entriesByMonths = getEntriesByMonths(entries, yearInput);
+
+    entriesByMonths.forEach((value, key) => {
+        tableBody.innerHTML += `
                 <tr class="body">
                     <td class="data col-2">${months[key]}</td>
-                    <td class="income col-3">--</td>
-                    <td class="expense col-3">${value}</td>
-                    <td class="savings col-4">0</td>
+                    <td class="income col-3">${value.income}</td>
+                    <td class="expense col-3">${value.expense}</td>
+                    <td class="savings col-4">${value.income - value.expense}</td>
                 </tr>
             `;
-            totalExpense += value;
-        })
+        totalExpense += value.expense;
+        totalIncome += value.income;
+    })
 
     tableBody.innerHTML += `
         <tr class="total">
-            <td class="col-2"></td>
-            <td class="income col-3">&#8377;0</td>
+            <td class="col-2">Total</td>
+            <td class="income col-3">&#8377;${totalIncome}</td>
             <td class="expense col-3">&#8377;${totalExpense}</td>
-            <td class="savings col-4">&#8377;0</td>
+            <td class="savings col-4">&#8377;${totalIncome - totalExpense}</td>
         </tr>
     `;
 }
 
-function getExpensesByMonths(expenses, year) {
-    const filteredExpenses = expenses.filter(expense => {
-        return new Date(expense.date).getFullYear() === Number(year);
-    });
-    
-    console.log(filteredExpenses);
+function getEntriesByMonths(entries, year) {
+    const entriesByMonths = new Map();
 
-    const expensesByMonths = new Map();
-
-    filteredExpenses.forEach(expense => {
-        console.log(expense);
-        const month = new Date(expense.date).getMonth();
-        if(expensesByMonths.has(month))
-            expensesByMonths.set(month, expensesByMonths.get(month)+expense.amount);
-        else
-            expensesByMonths.set(month, expense.amount);
+    entries.forEach(entry => {
+        const month = new Date(entry.date).getMonth();
+        if (entriesByMonths.has(month)) {
+            if (entry.entryType === 'expense') {
+                entriesByMonths.set(month, {
+                    income: entriesByMonths.get(month).income,
+                    expense: entriesByMonths.get(month).expense + entry.amount
+                });
+            }
+            else {
+                entriesByMonths.set(month, {
+                    income: entriesByMonths.get(month).income + entry.amount,
+                    expense: entriesByMonths.get(month).expense
+                });
+            }
+        }
+        else {
+            if (entry.entryType === 'expense') {
+                entriesByMonths.set(month, {
+                    income: 0,
+                    expense: entry.amount
+                });
+            }
+            else {
+                entriesByMonths.set(month, {
+                    income: entry.amount,
+                    expense: 0
+                });
+            }
+        }
     })
 
-    return expensesByMonths;
+    return entriesByMonths;
 }
 
 async function renderAll() {
+    reportTypeBtn.innerText = 'All';
+
     content.innerHTML = `
     <div class="container mb-4 d-flex flex-column justify-content-center align-items-center">
-                    <table id="expenses-table" class="table text-white table-hover table-bordered">
+                    <div class="mt-2 mb-3" style="margin:0;padding:0;"><h5 id="data-title">All time</h5></div>
+                    <table id="entries-table" class="table text-white table-hover table-bordered">
                         <thead class="mb-5" style="font-family: 'Exo 2', sans-serif;background-color: rgb(32,144,158)">
                             <tr class="mt-5">
                                 <th class="title col-2">Date (yyyy/mm/dd)</th>
@@ -387,46 +524,65 @@ async function renderAll() {
                                 <th class="title col-2">Expense</th>
                             </tr>
                         </thead>
-                        <tbody id="expenses-table-body" class="body text-dark">
+                        <tbody id="entries-table-body" class="body text-dark">
                         </tbody>
                     </table>
         </div>
     `;
 
+    let responseData, pageData;
     try {
-        expenses = await getAllExpenses();
-    } catch(err) {
+         responseData = await getAllEntries();
+         entries = responseData.entries;
+         pageData = responseData.pageData;
+    } catch (err) {
         alert('Something went wrong!');
         return;
     }
 
-    expenses.sort((a, b) => new Date(b.date) - new Date(a.date));
+    entries.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-    const tableBody = document.getElementById('expenses-table-body');
-    const expensesTable = document.getElementById('expenses-table');
+    const tableBody = document.getElementById('entries-table-body');
+    const entriesTable = document.getElementById('entries-table');
     let totalIncome = 0, totalExpense = 0, totSavings = 0;
+
+    console.log(content);
 
     tableBody.innerHTML = '';
 
-    expenses.forEach(expense => {
+    entries.forEach(entry => {
+        let currIncome, currExpense, bgColor;
+
+        if (entry.entryType === 'expense') {
+            currExpense = entry.amount;
+            totalExpense += currExpense;
+            currIncome = '--';
+            bgColor = '#C4C4C4';
+        }
+        else {
+            currIncome = entry.amount;
+            totalIncome += currIncome;
+            currExpense = '--';
+            bgColor = incomeRowColor;
+        }
+
         tableBody.innerHTML += `
-            <tr style="background-color: #C4C4C4;">
-                <td class="data col-2">${expense.date}</td>
-                <td class="data col-2">${expense.category}</td>
-                <td class="data col-4">${expense.description}</td>
-                <td class="income col-2">--</td>
-                <td class="expense col-2">${expense.amount}</td>
+            <tr style="background-color: ${bgColor};">
+                <td class="data col-2">${entry.date}</td>
+                <td class="data col-2">${entry.category}</td>
+                <td class="data col-4">${entry.description}</td>
+                <td class="income col-2">${currIncome}</td>
+                <td class="expense col-2">${currExpense}</td>
             </tr>
         `;
-        totalExpense += expense.amount;
     })
 
     tableBody.innerHTML += `
         <tr class="total">
-            <td class="col-2"></td>
+            <td class="col-2">Total</td>
             <td class="col-2"></td>
             <td class="col-4"></td>
-            <td class="income col-2">&#8377;0</td>
+            <td class="income col-2">&#8377;${totalIncome}</td>
             <td class="expense col-2">&#8377;${totalExpense}</td>
         </tr>
         <tr class="total">
@@ -434,101 +590,33 @@ async function renderAll() {
             <td class="col-2"></td>
             <td class="col-4"></td>
             <td class="col-2"></td>
-            <td class="savings col-2">Savings=&#8377;0</td>
+            <td class="savings col-2">Savings=&#8377;${totalIncome - totalExpense}</td>
         </tr>
     `;
+
+    addPaginationBtns(pageData, 'All');
 }
 
 async function renderNone() {
-
+    content.innerHTML = `
+        <div class="d-flex justify-content-center align-items-center mt-5"><h3>Something went wrong!</h3></div>
+    `;
 }
 
-function renderPremiumFeatures() {
-    const user = decodeToken(token);
-    const isPremium = user.isPremium;
-
-    if (isPremium) {
-        premBtnC.style.display = 'none';
-        downloadFileBtn.onclick = downloadFile;
-    }
-}
-
-function getAllExpenses() {
+function getAllEntries(query) {
     return new Promise(async (resolve, reject) => {
         let result;
         try {
-            result = await axiosInstance.get('/expenses', { headers: { "Authorization": token } });
+            result = await axiosInstance.get(`/entries?${query}&page=${page}`, { headers: { "Authorization": token } });
             if (!result) {
                 alert("Something went wrong!");
                 return;
             }
-            resolve(result.data.expenses);
+            resolve(result.data);
         } catch (err) {
             console.log(err);
             reject(err);
         }
-    });
-}
-
-function decodeToken(token) {
-    var base64Url = token.split('.')[1];
-    var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    var jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function (c) {
-        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-    }).join(''));
-
-    return JSON.parse(jsonPayload);
-}
-
-// async function deleteExpense(id) {
-//     await axiosInstance.post(`/delete-expense`, { expenseId: id }, { headers: { "Authorization": token } });
-//     render();
-// }
-
-// premium feature
-
-premBtn.onclick = async function (e) {
-    try {
-        var response = await axiosInstance.get('/purchase/premiumMembership', { headers: { 'Authorization': token } });
-        console.log(response);
-    } catch (err) {
-        console.log(err);
-        return;
-    }
-
-    const options = {
-        "key": response.data.key_id,
-        "order_id": response.data.order.id,
-        "handler": async function (response) {
-            const result = await axiosInstance.post('http://localhost:3000/purchase/updatetransactionstatus', {
-                order_id: options.order_id,
-                payment_id: response.razorpay_payment_id
-            }, { headers: { 'Authorization': token } });
-
-            alert('You are premium user now.');
-
-            console.log(result.data);
-
-            localStorage.setItem('token', result.data.token);
-
-            window.reload();
-        }
-    };
-
-    const rzp1 = new Razorpay(options);
-    rzp1.open();
-    e.preventDefault();
-
-    rzp1.on('payment.failed', async function (response) {
-        console.log(response);
-        await axiosInstance.post('http://localhost:3000/purchase/updatetransactionstatus', {
-            order_id: options.order_id,
-            payment_id: response.razorpay_payment_id
-        }, { headers: { 'Authorization': token } });
-
-        alert("Something went wrong!");
-
-        render();
     });
 }
 
@@ -543,6 +631,12 @@ async function downloadFile() {
         else
             alert('Something went wrong!');
     } catch (err) {
-        alert(err);
+        alert(err.response.data.message);
     }
 }
+
+
+// async function deleteExpense(id) {
+//     await axiosInstance.post(`/delete-entry`, { expenseId: id }, { headers: { "Authorization": token } });
+//     render();
+// }
