@@ -1,10 +1,9 @@
 const sequelize = require("../util/database");
-const { Op } =  require('sequelize');
 
-const getExpenses = (req, where) => {
-    return req.user.getExpenses();
+const getEntries = async (req, where) => {
+    return req.user.getEntries(where);
 };
 
 module.exports = {
-    getExpenses
+    getEntries
 };
