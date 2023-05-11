@@ -10,4 +10,4 @@ const ForgotPasswordRequests = sequelize.define('forgotpasswordrequests', {
     isActive: Sequelize.BOOLEAN
 });
 
-module.exports = ForgotPasswordRequests;
+module.exports = ForgotPasswordRequests;  
