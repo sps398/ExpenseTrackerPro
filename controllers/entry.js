@@ -6,11 +6,12 @@ const S3Services = require('../services/s3services');
 const FilesDownloaded = require('../models/filesdownloaded');
 const AWS = require('aws-sdk');
 require('dotenv').config();
-let pageLimit=5;
+let pageLimit;
 
 const getEntries = async (req, res, next) => {
     try {
         const page = +req.query.page || 1;
+        pageLimit = +req.query.pageLimit || 5;
 
         console.log(req.query);
 

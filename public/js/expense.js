@@ -155,6 +155,50 @@ async function postEntryAndUpdate(data, form) {
     })
 }
 
+function addSelectRowsView() {
+    const view = document.createElement('div');
+    view.id = 'pageLimitC';
+    view.className = 'd-flex justify-content-center align-items-center mt-3 mb-5';
+    view.innerHTML += `
+        <label for="pageLimit" class="mx-2">Rows per page:</label>
+
+        <select name="pageLimit" id="pageLimit" onChange=changePageLimit()>
+            <option value="5">5</option>
+            <option value="10">10</option>
+            <option value="15">15</option>
+            <option value="20">20</option>
+            <option value="25">25</option>
+            <option value="30">30</option>
+            <option value="35">35</option>
+            <option value="40">40</option>
+        </select>
+    `;
+
+    content.appendChild(view);
+
+    const RowPreference = localStorage.getItem('userRowPreference');
+    const pageLimit = document.getElementById('pageLimit');
+    if(RowPreference)
+        pageLimit.value = RowPreference;
+    else
+        pageLimit.value = '10';
+}
+
+function changePageLimit() {
+    const pageLimit = document.getElementById('pageLimit');
+    localStorage.setItem('userRowPreference', pageLimit.value);
+    page=1;
+    renderData(reportTypeBtn.innerText);
+}
+
+function removeViews() {
+    if(document.getElementById('btnsC'))
+        document.getElementById('btnsC').remove();
+
+    if(document.getElementById('pageLimitC'))
+        document.getElementById('pageLimitC').remove();
+}
+
 async function renderDaily() {
     reportTypeBtn.innerText = 'Daily';
 
@@ -171,7 +215,7 @@ async function renderDaily() {
                 <div class="d-flex mb-3">
                         <label for="dateInput" style="font-weight: bold;">Select date:</label>
                         <input type="date" min="2010-01-01" max="2050-12-01" value="${curr.getFullYear()}-${currMonth}-${currDate}" class="w-auto ms-2" id="dateInput">
-                        <button class="btn btn-primary ms-2" id="search">Search</button>
+                        <button class="btn btn-primary ms-2" id="search" onclick="renderDataDaily()">Search</button>
                 </div>
                 <div class="mt-4 mb-3" style="margin:0;padding:0;"><h5 id="data-title"></h5></div>
                     <table id="entries-table" class="table text-white table-hover table-bordered">
@@ -189,15 +233,14 @@ async function renderDaily() {
         </div>
     `;
 
-    document.getElementById('search').addEventListener('click', (e) => {
-        renderDataDaily();
-    });
+    // document.getElementById('search').addEventListener('click', (e) => {
+    //     renderDataDaily();
+    // });
     renderDataDaily();
 }
 
 async function renderDataDaily() {
-    if(document.getElementById('btnsC'))
-        document.getElementById('btnsC').remove();
+    removeViews();
 
     let dateInput = document.getElementById('dateInput').value;
     dateInput = new Date(dateInput);
@@ -262,6 +305,7 @@ async function renderDataDaily() {
     `;
 
     addPaginationBtns(pageData, 'Daily');
+    addSelectRowsView();
 }
 
 async function renderMonthly() {
@@ -299,6 +343,7 @@ async function renderMonthly() {
     `;
 
     document.getElementById('search').addEventListener('click', (e) => {
+        console.log('clicked');
         renderDataMonthly();
     });
 
@@ -306,8 +351,7 @@ async function renderMonthly() {
 }
 
 async function renderDataMonthly() {
-    if(document.getElementById('btnsC'))
-        document.getElementById('btnsC').remove();
+    removeViews();
 
     const tableBody = document.getElementById('entries-table-body');
     const entriesTable = document.getElementById('entries-table');
@@ -376,8 +420,9 @@ async function renderDataMonthly() {
             <td class="savings col-2">Savings=&#8377;${totalIncome - totalExpense}</td>
         </tr>
     `;
-    
+
     addPaginationBtns(pageData, 'Monthly');
+    addSelectRowsView();
 }
 
 function renderYearly() {
@@ -509,6 +554,8 @@ function getEntriesByMonths(entries, year) {
 }
 
 async function renderAll() {
+    removeViews();
+
     reportTypeBtn.innerText = 'All';
 
     content.innerHTML = `
@@ -595,6 +642,7 @@ async function renderAll() {
     `;
 
     addPaginationBtns(pageData, 'All');
+    addSelectRowsView();
 }
 
 async function renderNone() {
@@ -607,7 +655,8 @@ function getAllEntries(query) {
     return new Promise(async (resolve, reject) => {
         let result;
         try {
-            result = await axiosInstance.get(`/entries?${query}&page=${page}`, { headers: { "Authorization": token } });
+            const pageLimit = localStorage.getItem('userRowPreference');
+            result = await axiosInstance.get(`/entries?${query}&page=${page}&pageLimit=${pageLimit}`, { headers: { "Authorization": token } });
             if (!result) {
                 alert("Something went wrong!");
                 return;
