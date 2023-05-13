@@ -1,5 +1,5 @@
 const axiosInstance = axios.create({
-    baseURL: 'http://localhost:3000'
+    baseURL: 'http://16.16.120.216:3000'
 });
 
 let token = localStorage.getItem('token');
