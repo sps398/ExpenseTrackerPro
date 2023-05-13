@@ -21,7 +21,7 @@ signInForm.addEventListener('submit', async (e) => {
             setAlert(result);
             localStorage.setItem('token', result.data.token);
             setTimeout(() => {
-                window.location.href = '../../views/dashboard/expense.html';
+                window.location.href = '../../dashboard/expense.html';
             }, 2000);
         }
 
