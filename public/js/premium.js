@@ -38,7 +38,7 @@ premBtn.onclick = async function (e) {
         "key": response.data.key_id,
         "order_id": response.data.order.id,
         "handler": async function (response) {
-            const result = await axiosInstance.post('http://16.16.120.216:3000/purchase/updatetransactionstatus', {
+            const result = await axiosInstance.post('http://13.50.101.167:3000/purchase/updatetransactionstatus', {
                 order_id: options.order_id,
                 payment_id: response.razorpay_payment_id
             }, { headers: { 'Authorization': token } });
@@ -59,7 +59,7 @@ premBtn.onclick = async function (e) {
 
     rzp1.on('payment.failed', async function (response) {
         console.log(response);
-        await axiosInstance.post('http://16.16.120.216:3000/purchase/updatetransactionstatus', {
+        await axiosInstance.post('http://13.50.101.167:3000/purchase/updatetransactionstatus', {
             order_id: options.order_id,
             payment_id: response.razorpay_payment_id
         }, { headers: { 'Authorization': token } });

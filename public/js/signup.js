@@ -5,7 +5,7 @@ const passwordInput = document.getElementById('password');
 const alertText = document.getElementById('alert-text');
 
 const axiosInstance = axios.create({
-    baseURL: 'http://16.16.120.216:3000'
+    baseURL: 'http://13.50.101.167:3000'
 });
 
 signUpForm.addEventListener('submit', async (e) => {
