@@ -49,7 +49,7 @@ navc.innerHTML = `
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
                         <li><a id="userprofile" class="dropdown-item" href="#">My profile</a></li>
-                        <li><a class="dropdown-item" href="#">Logout</a></li>
+                        <li id="logout"><a class="dropdown-item" href="#">Logout</a></li>
                     </ul>
                 </li>
             </ul>
@@ -84,4 +84,9 @@ function showProfile() {
 
     document.body.appendChild(profile);
     document.body.style.background = 'white';
+}
+
+document.getElementById('logout').onclick = function() {
+    localStorage.removeItem('token');
+    window.location.href="../auth/login/login.html";
 }

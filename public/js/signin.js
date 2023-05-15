@@ -22,7 +22,7 @@ signInForm.addEventListener('submit', async (e) => {
             localStorage.setItem('token', result.data.token);
             setTimeout(() => {
                 window.location.href = '../../dashboard/expense.html';
-            }, 2000);
+            }, 1000);
         }
 
     } catch(err) {

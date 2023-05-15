@@ -19,7 +19,8 @@ signUpForm.addEventListener('submit', async (e) => {
 
     try {
         const result = await axiosInstance.post('/user/signup', user);
-        setAlert(result);        
+        setAlert(result);
+        window.location.href="../login/login.html";
     } catch(err) {
         setAlert(err.response);
     }
