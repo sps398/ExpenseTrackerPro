@@ -59,9 +59,6 @@ sequelize
     .sync()
     .then(result => {
         const port = process.env.PORT || 3000;
-        app.listen(port, () => {
-            console.log('Connected to server...');
-            console.log('Connected to the MySql server...');
-        });
+        app.listen(port);
     })
     .catch(err => console.log(err));
