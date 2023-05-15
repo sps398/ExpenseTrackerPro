@@ -111,7 +111,7 @@ const forgotPassword = async (req, res, next) => {
             }],
             subject: 'Reset Password',
             htmlContent: `
-            <html><head></head><body><a href="http://13.50.101.167:3000/user/password/resetpassword/${requestId}">Click on this link to reset your password</a></body></html>
+            <html><head></head><body><a href="http://16.16.156.251:3000/user/password/resetpassword/${requestId}">Click on this link to reset your password</a></body></html>
             `,
             params: {
                 API_KEY: process.env.SENDINBLUE_EMAIL_KEY
