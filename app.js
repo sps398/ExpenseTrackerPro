@@ -58,6 +58,7 @@ FilesDownloaded.belongsTo(User);
 sequelize
     .sync()
     .then(result => {
+        console.log('Connected to the MySql server...');
         const port = process.env.PORT || 3000;
         app.listen(port);
     })
