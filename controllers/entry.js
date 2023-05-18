@@ -11,7 +11,7 @@ let pageLimit;
 const getEntries = async (req, res, next) => {
     try {
         const page = +req.query.page || 1;
-        pageLimit = +req.query.pageLimit || 5;
+        pageLimit = +req.query.pageLimit || 10;
 
         console.log(req.query);
 

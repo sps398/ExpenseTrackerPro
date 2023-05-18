@@ -3,6 +3,7 @@ const axiosInstance = axios.create({
 });
 
 let token = localStorage.getItem('token');
+let user;
 
 function decodeToken() {
     var base64Url = token.split('.')[1];
@@ -14,4 +15,4 @@ function decodeToken() {
     return JSON.parse(jsonPayload);
 }
 
-let user = decodeToken();
+user = decodeToken();
