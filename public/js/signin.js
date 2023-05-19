@@ -3,9 +3,10 @@ const emailInput = document.getElementById('email');
 const passwordInput = document.getElementById('password');
 const alertText = document.getElementById('alert-text');
 
-const axiosInstance = axios.create({
-    baseURL: 'http://16.16.156.251:3000'
-});
+if(token)
+    window.location.href = '../../dashboard/expense.html';
+else
+    localStorage.removeItem('token');
 
 signInForm.addEventListener('submit', async (e) => {
     e.preventDefault();

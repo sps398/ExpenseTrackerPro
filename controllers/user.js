@@ -26,7 +26,7 @@ const postUserSignUp = async (req, res, next) => {
             password: password
         });
 
-        return res.status(200).json({ message: "You are registered successfully!", success: true });
+        return res.status(200).json({ message: "You are registered successfully...", success: true });
     } catch (err) {
         return res.status(500).json({ message: "Some error occurred!", success: false });
     }

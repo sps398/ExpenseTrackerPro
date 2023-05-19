@@ -152,26 +152,27 @@ const postAddEntry = async (req, res, next) => {
     }
 }
 
-const postDeleteEntry = async (req, res, next) => {
+const deleteEntry = async (req, res, next) => {
     const t = await sequelize.transaction();
     try {
-        const entryId = req.body.entryId;
+        const entryId = req.params.id;
+
         if (entryId == undefined || entryId.length === 0)
             return res.status(400).json({ message: 'Bad request', success: false });
         
         const user = req.user;
         
-        const entries = await user.getExpenses({ where: { id:entryId } });
+        const entries = await user.getEntries({ where: { id:entryId } });
         const entry = entries[0];
 
-        await entry.destroy({ transaction: t });
-
-        if(req.body.entryType === 'expense')
+        if(entry.entryType === 'expense')
             user.totalExpense = Number(user.totalExpense) - Number(entry.amount);
         else
             user.totalIncome = Number(user.totalIncome) - Number(entry.amount);
 
         user.totalSavings = Number(user.totalIncome) - Number(user.totalExpense);
+
+        await entry.destroy({ transaction: t });
 
         await user.save({ transaction: t });
 
@@ -211,6 +212,6 @@ const downloadEntries = async (req, res) => {
 module.exports = {
     getEntries,
     postAddEntry,
-    postDeleteEntry,
+    deleteEntry,
     downloadEntries
 }

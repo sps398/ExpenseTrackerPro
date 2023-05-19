@@ -15,4 +15,5 @@ function decodeToken() {
     return JSON.parse(jsonPayload);
 }
 
-user = decodeToken();
+if(token)
+    user = decodeToken();
