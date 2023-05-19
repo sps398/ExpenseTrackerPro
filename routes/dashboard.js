@@ -8,7 +8,7 @@ router.get('/Entries', userAuthentication.authenticate, entryController.getEntri
 
 router.post('/add-entry', userAuthentication.authenticate, entryController.postAddEntry);
 
-router.post('/delete-entry/', userAuthentication.authenticate, entryController.postDeleteEntry);
+router.get('/delete-entry/:id', userAuthentication.authenticate, entryController.deleteEntry);
 
 router.get('/download/', userAuthentication.authenticate, entryController.downloadEntries);
 

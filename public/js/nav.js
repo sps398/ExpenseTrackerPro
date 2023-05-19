@@ -42,8 +42,8 @@ navc.innerHTML = `
                 </li>
                 <li id="prembtnc" class="nav-item ms-lg-5"><button id="prembtn" class="btn btn-outline-warning">Buy Premium</button></li>
             </ul>
-            <ul class="navbar-nav me-lg-3 mb-2 mb-lg-0">
-                <li class="nav-item dropdown">
+            <ul class="navbar-nav me-lg-5 mb-2 mb-lg-0">
+                <li class="nav-item dropdown dropdown-menu-end dropdown-menu-lg-start">
                     <a id="userprofilebtn" class="nav-link dropdown-toggle text-white" href="#" id="navbarDropdown" role="button"
                         data-bs-toggle="dropdown" aria-expanded="false">
                     </a>
@@ -75,15 +75,20 @@ function showProfile() {
     let hasPremium = (user.isPremium) ? "Yes" : "No";
     let profile = document.createElement('div');
     profile.innerHTML += `
-        <div class="container w-auto d-flex flex-column justify-content-center align-items-center position-absolute bg-dark text-white" style="left:40%;top:40%">
-            <div><span class="col-2">Name:</span><span id="username" class="col-4">${user.name}</span></div>
-            <div><span class="col-2">Email:</span><span id="email" class="col-4">${user.email}</span></div>
-            <div><span class="col-2">Premium Subscription:</span><span id="ispremium" class="col-4">${hasPremium}</span></div>
+        <div class="container w-auto position-absolute bg-dark text-white p-3" style="left:50%;top:45%;transform:translate(-50%,-50%);z-index:1000;box-shadow: 5px 5px 1000000px 1000000px #999999;">
+            <div><button class="btn btn-danger" id="close" style="float:right;">X</button></div>
+            <div id="info">
+                <div>Name: ${user.name}</div>
+                <div>Email: ${user.email}</div>
+                <div>Premium Subscription: ${hasPremium}</div>
+            </div>
         </div>
     `;
 
     document.body.appendChild(profile);
-    document.body.style.background = 'white';
+    document.getElementById('close').onclick = function(e) {
+        profile.remove();
+    }
 }
 
 document.getElementById('logout').onclick = function() {

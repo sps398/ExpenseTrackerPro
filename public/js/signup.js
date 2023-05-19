@@ -4,9 +4,10 @@ const emailInput = document.getElementById('email');
 const passwordInput = document.getElementById('password');
 const alertText = document.getElementById('alert-text');
 
-const axiosInstance = axios.create({
-    baseURL: 'http://16.16.156.251:3000'
-});
+if(token)
+    window.location.href = '../../dashboard/expense.html';
+else
+    localStorage.removeItem('token');
 
 signUpForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -19,8 +20,11 @@ signUpForm.addEventListener('submit', async (e) => {
 
     try {
         const result = await axiosInstance.post('/user/signup', user);
+        result.data.message += 'Moving to the login page';
         setAlert(result);
-        window.location.href="../login/login.html";
+        setTimeout(() => {
+            window.location.href="../login/login.html";
+        }, 2000);
     } catch(err) {
         setAlert(err.response);
     }

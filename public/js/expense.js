@@ -19,6 +19,9 @@ const itemsArr = Array.from(items);
 let entries;
 const incomeRowColor = '#a2ddd5';
 
+if(!token)
+    window.location.href = '../auth/login/login.html';
+
 let page;
 
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -193,7 +196,7 @@ function changePageLimit() {
 
 function removeViews() {
     if(document.getElementById('btnsC'))
-        document.getElementById('btnsC').remove();
+        document.getElementById('btnsC').remove();  
 
     if(document.getElementById('pageLimitC'))
         document.getElementById('pageLimitC').remove();
@@ -225,6 +228,7 @@ async function renderDaily() {
                                 <th class="title col-4">Description</th>
                                 <th class="title col-2">Income</th>
                                 <th class="title col-2">Expense</th>
+                                <th class="col-1"></th>
                             </tr>
                         </thead>
                         <tbody id="entries-table-body" class="body text-dark">
@@ -233,9 +237,6 @@ async function renderDaily() {
         </div>
     `;
 
-    document.getElementById('search').addEventListener('click', (e) => {
-        renderDataDaily();
-    });
     renderDataDaily();
 }
 
@@ -280,11 +281,12 @@ async function renderDataDaily() {
         }
 
         tableBody.innerHTML += `
-            <tr style="background-color: ${bgColor};">
+            <tr class="data-row" style="background-color: ${bgColor};">
                 <td class="data col-2">${entry.category}</td>
                 <td class="data col-4">${entry.description}</td>
                 <td class="income col-2">${currIncome}</td>
                 <td class="expense col-2">${currExpense}</td>
+                <td class="deleteC center text-dark col-1"><i id="${entry.id}" class="delete fa-solid fa-trash" onclick=deleteEntry(this.id)></i></td>
             </tr>
         `;
     })
@@ -295,12 +297,14 @@ async function renderDataDaily() {
             <td class="col-4"></td>
             <td class="income col-2">&#8377;${totalIncome}</td>
             <td class="expense col-2">&#8377;${totalExpense}</td>
+            <td class="col-1"></td>
         </tr>
         <tr class="total">
             <td class="col-2"></td>
             <td class="col-4"></td>
             <td class="col-2"></td>
             <td class="savings col-2">Savings=&#8377;${totalIncome - totalExpense}</td>
+            <td class="col-1"></td>
         </tr>
     `;
 
@@ -323,7 +327,7 @@ async function renderMonthly() {
                 <div class="d-flex mb-3">
                         <label for="dateInput" style="font-weight: bold;">Select month:</label>
                         <input type="month" min="2010-01" max="2050-12" value="${curr.getFullYear()}-${currMonth}" class="w-auto ms-2" id="monthInput">
-                        <button class="btn btn-primary ms-2" id="search">Search</button>
+                        <button class="btn btn-primary ms-2" id="search" onclick="renderDataMonthly()">Search</button>
                 </div>
                 <div class="mt-3 mb-3" style="margin:0;padding:0;"><h5 id="data-title"></h5></div>
                     <table id="entries-table" class="table text-white table-hover table-bordered">
@@ -341,11 +345,6 @@ async function renderMonthly() {
                     </table>
         </div>
     `;
-
-    document.getElementById('search').addEventListener('click', (e) => {
-        console.log('clicked');
-        renderDataMonthly();
-    });
 
     renderDataMonthly();
 }
@@ -394,7 +393,7 @@ async function renderDataMonthly() {
         }
 
         tableBody.innerHTML += `
-            <tr style="background-color: ${bgColor};">
+            <tr class="data-row" style="background-color: ${bgColor};">
                 <td class="data col-2">${entry.date}</td>
                 <td class="data col-2">${entry.category}</td>
                 <td class="data col-4">${entry.description}</td>
@@ -406,7 +405,7 @@ async function renderDataMonthly() {
 
     tableBody.innerHTML += `
         <tr class="total">
-            <td class="col-2">Total</td>
+            <td class="center col-2">Total</td>
             <td class="col-2"></td>
             <td class="col-4"></td>
             <td class="income col-2">&#8377;${totalIncome}</td>
@@ -435,7 +434,7 @@ function renderYearly() {
         <div class="d-flex mb-3">
             <label for="dateInput" style="font-weight: bold;">Select year:</label>
             <input type="number" min="2010" max="2023" value="${new Date().getFullYear()}" class="w-auto ms-2" id="yearInput">
-            <button class="btn btn-primary ms-2" id="search">Search</button>
+            <button class="btn btn-primary ms-2" id="search" onclick="renderDataYearly()">Search</button>
         </div>
         <div class="mt-3 mb-3" style="margin:0;padding:0;"><h5 id="data-title"></h5></div>
         <table id="entries-table" class="table text-white table-hover table-bordered">
@@ -683,7 +682,7 @@ async function downloadFile() {
 }
 
 
-// async function deleteExpense(id) {
-//     await axiosInstance.post(`/delete-entry`, { expenseId: id }, { headers: { "Authorization": token } });
-//     render();
-// }
+async function deleteEntry(id) {
+    await axiosInstance.get(`/delete-entry/${id}`, { headers: { "Authorization": token } });
+    renderData('Daily');
+}

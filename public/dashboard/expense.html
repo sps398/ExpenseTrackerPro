@@ -49,8 +49,13 @@
             background-color: #C4C4C4;
         }
 
-        .title .data {
+        .title, .data, .center {
             text-align: center;
+        }
+
+        .delete:hover {
+            cursor: pointer;
+            color: red;
         }
     </style>
 </head>
@@ -60,7 +65,7 @@
     </div>
 
     <div class="container d-flex justify-content-center align-items-center pb-4 pt-4">
-        <i id="downloadfile" class="btn fa-solid fa-download text-dar ms-3 position-absolute" style="right: 10%;"></i>
+        <i id="downloadfile" class="btn fa-solid fa-download text-dar ms-3 position-absolute" style="right:3%;"></i>
         <h4 class=""
             style="margin-left: 10rem;font-family: 'Josefin Sans', sans-serif;font-weight: bold;border-bottom: 5px solid rgb(32,144,158);font-weight: bold;">
             My Expenses</h4>
