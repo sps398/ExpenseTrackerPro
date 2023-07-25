@@ -75,6 +75,9 @@ const getEntries = async (req, res, next) => {
 function getEntriesByDateOrMonth(req, type, data, page) {
     return new Promise(async (resolve, reject) => {
         try {
+            const user = req.user;
+            const id = user.id;
+
             const entries = await UserServices.getEntries(req, {
                 where: sequelize.where(sequelize.fn(type, sequelize.col("date")), data),
                 offset: (page-1)*pageLimit,
@@ -87,6 +90,17 @@ function getEntriesByDateOrMonth(req, type, data, page) {
         }
     });
 }
+
+function filterUserData(column, value, page, pageLimit, userData) {
+    const filteredData = userData.filter((user) => {
+        console.log(user[column] + " " + value);
+        return user[column] === value;
+    });
+    console.log('Filtered Data ' + filteredData); 
+    const offset = (page - 1) * pageLimit;
+    const limitedData = filteredData.slice(offset, offset + pageLimit);
+    return limitedData;
+  }
 
 function getEntriesByYear(req, data, page) {
     return new Promise(async (resolve, reject) => {
@@ -124,14 +138,16 @@ const postAddEntry = async (req, res, next) => {
 
     try {
         const user = req.user;
-        
-        await user.createEntry({
+
+        const newEntry = {
             amount: req.body.amount,
             description: req.body.description,
             category: req.body.category,
             date: req.body.date,
             entryType: entryType
-        }, { transaction: t });
+        }
+        
+        await user.createEntry(newEntry, { transaction: t });
 
         if(entryType === 'expense')
             user.totalExpense = Number(user.totalExpense) + Number(req.body.amount);
