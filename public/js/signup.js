@@ -4,10 +4,10 @@ const emailInput = document.getElementById('email');
 const passwordInput = document.getElementById('password');
 const alertText = document.getElementById('alert-text');
 
-if(token)
-    window.location.href = '../../dashboard/expense.html';
-else
-    localStorage.removeItem('token');
+// if(token)
+//     window.location.href = '../../dashboard/expense.html';
+// else
+//     localStorage.removeItem('token');
 
 signUpForm.addEventListener('submit', async (e) => {
     e.preventDefault();

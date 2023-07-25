@@ -1,6 +1,6 @@
-const User = require('../models/user');
-const Entry = require('../models/entry');
-const sequelize = require('../util/database');
+// const User = require('../models/user');
+// const Entry = require('../models/entry');
+// const sequelize = require('../util/database');
 let pageLimit=5;
 
 module.exports.getLeaderboardData = async (req, res, next) => {

@@ -1,18 +1,18 @@
 const User = require('../models/user');
 const ForgotPasswordRequest = require('../models/forgotpasswordrequest');
-const FilesDownloaded = require('../models/filesdownloaded');
+// const FilesDownloaded = require('../models/filesdownloaded');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const SibApiV3Sdk = require('sib-api-v3-sdk');
 const { v4: uuidv4 } = require('uuid');
-const sequelize = require('../util/database');
+const mongoose = require('mongoose');
 const path = require('path');
 require('dotenv').config();
 const pageLimit=5;
 
 const postUserSignUp = async (req, res, next) => {
     try {
-        const users = await User.findAll({ where: { email: req.body.email } });
+        const users = await User.find({ email: req.body.email });
 
         if (users[0]) return res.status(400).json({ message: "User already exist", success: false });
 
@@ -20,23 +20,24 @@ const postUserSignUp = async (req, res, next) => {
         let password = req.body.password;
         password = await bcrypt.hash(password, salt);
 
-        await User.create({
+        const user = new User({
             name: req.body.name,
             email: req.body.email,
             password: password
         });
 
+        await user.save();
+
         return res.status(200).json({ message: "You are registered successfully...", success: true });
     } catch (err) {
+        console.log(err);
         return res.status(500).json({ message: "Some error occurred!", success: false });
     }
 };
 
 const postUserSignIn = async (req, res, next) => {
     try {
-        const users = await User.findAll({
-            where: { email: req.body.email }
-        });
+        const users = await User.find({ email: req.body.email });
 
         const user = users[0];
 
@@ -59,36 +60,36 @@ const postUserSignIn = async (req, res, next) => {
 };
 
 const forgotPassword = async (req, res, next) => {
-    const t = await sequelize.transaction();
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    console.log('sending mail...');
 
     try {
         const email = req.body.email;
     
-        const users = await User.findAll({ where: { email } });
+        const users = await User.find({ email });
         const user = users[0];
 
         if(!user)
             return res.status(400).json({ message: 'Incorrect Email', success: false });
 
-        const requests = await ForgotPasswordRequest.findAll({ where: { userId: user.id, isActive: true } });
+        const requests = await ForgotPasswordRequest.find({ 'user.userId': user._id, isActive: true });
+
+        console.log(requests);
 
         let request = requests[0];
 
-        let requestId;
-
-        if(!request) {
-            requestId = uuidv4();
-        
-            request = {
-                id: requestId,
-                userId: user.id,
+        if(!request) {        
+            request = new ForgotPasswordRequest({
+                user: {
+                    userId: user._id,
+                    email: user.email
+                },
                 isActive: true
-            };
-        
-            await ForgotPasswordRequest.create(request, { t });
-        }
-        else {
-            requestId = request.id;
+            });
+
+            request = await request.save({ session });
         }
     
         var client = SibApiV3Sdk.ApiClient.instance;
@@ -111,7 +112,7 @@ const forgotPassword = async (req, res, next) => {
             }],
             subject: 'Reset Password',
             htmlContent: `
-            <html><head></head><body><a href="http://localhost:3000/user/password/resetpassword/${requestId}">Click on this link to reset your password</a></body></html>
+            <html><head></head><body><a href="http://localhost:3000/user/password/resetpassword/${request._id.toString()}">Click on this link to reset your password</a></body></html>
             `,
             params: {
                 API_KEY: process.env.SENDINBLUE_EMAIL_KEY
@@ -122,46 +123,51 @@ const forgotPassword = async (req, res, next) => {
         };
     
         apiInstance.sendTransacEmail(sendSmtpEmail).then(async function (data) {
-            await t.commit();
+            await session.commitTransaction();
+            session.endSession();
             console.log('API called successfully. Returned data: ' + data);
         }, function (error) {
             throw new Error(err);
         });
     } catch(err) {
-        await t.rollback();       
         console.log(err);
+        await session.abortTransaction();
+        session.endSession();       
         return res.status(500).json({ message: 'Something went wrong!', success: false });
     }
 
 }
 
 const getResetPassword = async (req, res, next) => {
-    return res.render('reset-password', { requestId: req.params.requestId });
+    return res.render('reset-password', { requestId: req.params.requestId, nonce1: `nonce1 + ${Math.random()*100}`, nonce3: `nonce3 + ${Math.random()*100}`, nonce2: `nonce2 + ${Math.random()*100}` });
 }
 
 const postUpdatePassword = async (req, res, next) => {
-    const t = await sequelize.transaction();
+    const session = await mongoose.startSession();
+    session.startTransaction();
     try {
         let newPassword = req.body.newPassword;
     
         const salt = await bcrypt.genSalt(10);
         newPassword = await bcrypt.hash(newPassword, salt);
     
-        const request = await ForgotPasswordRequest.findByPk(req.params.requestId);
+        const request = await ForgotPasswordRequest.findById(req.params.requestId);
     
-        await User.update({ password: newPassword }, { where: { id: request.userId }, t });
+        await User.findByIdAndUpdate(request.user.userId, { password: newPassword }, { session } );
 
         request.isActive = false;
 
-        await request.save({ t });
+        await request.save({ session });
 
-        await t.commit();
+        await session.commitTransaction();
+        session.endSession();
 
         return res.status(200).json({ message: 'Password updated successfully!', success: true });
 
     } catch(err) {
         console.log(err);
-        await t.rollback();
+        await session.abortTransaction();
+        session.endSession();
         return res.status(500).json({ message: "Something went wrong!", success: false });
     }
 }
@@ -199,6 +205,17 @@ const generateAccessToken = function (user) {
     console.log(token);
     return token;
 }
+
+// async function generateNonce() {
+//     try {
+//       const randomBuffer = new Uint8Array(16); // 16 bytes for the nonce (adjust as needed)
+//       const crypto = window.crypto || window.msCrypto; // Handle browser compatibility
+//       crypto.getRandomValues(randomBuffer);
+//       return btoa(String.fromCharCode(...randomBuffer));
+//     } catch (error) {
+//       console.error('Error generating nonce:', error.message);
+//     }
+//   }
 
 module.exports = {
     postUserSignUp,

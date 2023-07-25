@@ -2,9 +2,8 @@ const ForgotPasswordRequests = require('../models/forgotpasswordrequest');
 
 module.exports.validateRequest = async (req, res, next) => {
     try {
-        console.log('hllo');
         const requestId = req.params.requestId;
-        const request = await ForgotPasswordRequests.findByPk(requestId);
+        const request = await ForgotPasswordRequests.findById(requestId);
 
         if(!request)
             return res.status(400).send({ message: 'Bad request', success: false });

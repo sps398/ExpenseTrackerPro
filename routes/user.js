@@ -17,6 +17,6 @@ router.get('/password/resetpassword/:requestId',forgotPasswordValidation.validat
 
 router.post('/password/updatepassword/:requestId', forgotPasswordValidation.validateRequest,  userController.postUpdatePassword);
 
-router.get('/filesdownloaded/', userAuthentication.authenticate, userController.getFilesDownloaded);
+// router.get('/filesdownloaded/', userAuthentication.authenticate, userController.getFilesDownloaded);
 
 module.exports = router;

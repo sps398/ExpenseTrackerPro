@@ -3,10 +3,10 @@ const emailInput = document.getElementById('email');
 const passwordInput = document.getElementById('password');
 const alertText = document.getElementById('alert-text');
 
-if(token)
-    window.location.href = '../../dashboard/expense.html';
-else
-    localStorage.removeItem('token');
+// if(token)
+//     // window.location.href = '../../dashboard/expense.html';
+// else
+//     localStorage.removeItem('token');
 
 signInForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -22,7 +22,7 @@ signInForm.addEventListener('submit', async (e) => {
             setAlert(result);
             localStorage.setItem('token', result.data.token);
             setTimeout(() => {
-                window.location.href = '../../dashboard/expense.html';
+                // window.location.href = '../../dashboard/expense.html';
             }, 1000);
         }
 

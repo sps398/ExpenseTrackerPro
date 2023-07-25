@@ -1,9 +1,9 @@
-const Entry = require('../models/entry');
-const User = require('../models/user');
-const sequelize = require('../util/database');
-const UserServices = require('../services/userservices');
-const S3Services = require('../services/s3services');
-const FilesDownloaded = require('../models/filesdownloaded');
+// const Entry = require('../models/entry');
+// const User = require('../models/user');
+// const sequelize = require('../util/database');
+// const UserServices = require('../services/userservices');
+// const S3Services = require('../services/s3services');
+// const FilesDownloaded = require('../models/filesdownloaded');
 const AWS = require('aws-sdk');
 require('dotenv').config();
 let pageLimit;
