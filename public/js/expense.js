@@ -22,7 +22,7 @@ const incomeRowColor = '#a2ddd5';
 if(!token)
     window.location.href = '../auth/login/login.html';
 
-let page;
+let page
 
 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 

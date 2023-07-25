@@ -81,7 +81,7 @@ premBtn.onclick = async function (e) {
 async function updateTransactionStatus(order_id, payment_id) {
     return new Promise(async (resolve, reject) => {
         try {
-            const result = await axiosInstance.post('http://16.16.156.251:3000/purchase/updatetransactionstatus', {
+            const result = await axiosInstance.post('http://localhost:3000/purchase/updatetransactionstatus', {
                     order_id: order_id,
                     payment_id: payment_id
                 }, { headers: { 'Authorization': token } });

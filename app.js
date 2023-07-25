@@ -38,6 +38,10 @@ app.use('/', dashboardRoutes);
 app.use('/premium', premiumRoutes);
 app.use('/purchase', purchaseRoutes);
 
+app.use('/', (req, res) => {
+    res.redirect('/dashboard/expense.html');
+})
+
 app.use((req, res) => {
     console.log(req.url);
     res.sendFile(path.join(__dirname, `public/${req.url}`));
