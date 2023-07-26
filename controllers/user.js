@@ -126,7 +126,7 @@ const forgotPassword = async (req, res, next) => {
             await session.commitTransaction();
             session.endSession();
             console.log('API called successfully. Returned data: ' + data);
-        }, function (error) {
+        }, function (err) {
             throw new Error(err);
         });
     } catch (err) {
@@ -139,7 +139,8 @@ const forgotPassword = async (req, res, next) => {
 }
 
 const getResetPassword = async (req, res, next) => {
-    return res.render('reset-password', { requestId: req.params.requestId, nonce1: `nonce1 + ${Math.random() * 100}`, nonce3: `nonce3 + ${Math.random() * 100}`, nonce2: `nonce2 + ${Math.random() * 100}` });
+    res.set("Content-Security-Policy", "default-src *; style-src 'self' http://* 'unsafe-inline'; script-src 'self' http://* 'unsafe-inline' 'unsafe-eval'");
+    return res.render('reset-password', { requestId: req.params.requestId, nonce: uuidv4() });
 }
 
 const postUpdatePassword = async (req, res, next) => {

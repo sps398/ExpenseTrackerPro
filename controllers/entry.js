@@ -1,6 +1,5 @@
 const Entry = require('../models/entry');
 const User = require('../models/user');
-const UserServices = require('../services/userservices');
 const S3Services = require('../services/s3services');
 const FilesDownloaded = require('../models/filesdownloaded');
 const mongoose = require('mongoose');

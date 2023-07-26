@@ -14,6 +14,7 @@ const ejs = require('ejs');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const mongoose = require('mongoose');
+const axios = require("axios");
 require('dotenv').config();
 
 const app = express();
@@ -27,6 +28,14 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(cors());
 app.use(helmet());
 app.use(morgan('combined', { stream: accessLogStream }));
+// app.use(helmet.contentSecurityPolicy({
+//     directives: {
+//       defaultSrc: ["'self'"],
+//       scriptSrc: ["'self'", "'sha256-hash-value'"], // Replace 'sha256-hash-value' with the actual hash value of the inline script
+//       styleSrc: ["'self'"],
+//       // Add more directives as needed based on your application's requirements
+//     },
+//   }));
 
 app.use('/user', userRoutes);
 app.use('/', dashboardRoutes);
