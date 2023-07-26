@@ -19,7 +19,7 @@ const itemsArr = Array.from(items);
 let entries;
 const incomeRowColor = '#a2ddd5';
 
-if(!token)
+if (!token)
     window.location.href = '../auth/login/login.html';
 
 let page
@@ -29,7 +29,7 @@ const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 window.addEventListener('DOMContentLoaded', () => {
     downloadFileBtn.onclick = downloadFile;
     reportTypeBtn.innerText = 'Daily';
-    page=1;
+    page = 1;
     renderDaily();
 });
 
@@ -38,8 +38,8 @@ itemsArr.forEach(item => {
         const reportType = e.target.innerText;
         reportTypeBtn.innerText = reportType;
 
-        page=1;
-        
+        page = 1;
+
         switch (reportType) {
             case 'Daily':
                 renderDaily();
@@ -74,15 +74,15 @@ function renderData(view) {
 
 function addPaginationBtns(data, view) {
     const btnsC = document.createElement('div');
-    btnsC.id='btnsC';
+    btnsC.id = 'btnsC';
     btnsC.style.display = 'inline-block';
     btnsC.className = 'w-25 d-flex justify-content-center align-items-center m-auto mt-5';
 
-    if(data.hasPreviousPage) {
+    if (data.hasPreviousPage) {
         const btn2 = document.createElement('button');
         btn2.innerHTML = data.previousPage;
         btn2.addEventListener('click', (e) => {
-            page=e.target.innerHTML;
+            page = e.target.innerHTML;
             renderData(view);
         });
         btnsC.appendChild(btn2);
@@ -93,18 +93,18 @@ function addPaginationBtns(data, view) {
     btn1.className = 'mx-2 bg-dark text-white';
 
     btn1.addEventListener('click', (e) => {
-        page=e.target.innerHTML;
+        page = e.target.innerHTML;
         renderData(view);
     });
     btnsC.appendChild(btn1);
 
     console.log(data.hasNextPage);
 
-    if(data.hasNextPage) {
+    if (data.hasNextPage) {
         const btn3 = document.createElement('button');
         btn3.innerHTML = data.nextPage;
         btn3.addEventListener('click', (e) => {
-            page=e.target.innerHTML;
+            page = e.target.innerHTML;
             renderData(view);
         });
         btnsC.appendChild(btn3);
@@ -148,7 +148,7 @@ async function postEntryAndUpdate(data, form) {
         try {
             await axiosInstance.post('/add-entry', data, { headers: { "Authorization": token } });
             form.reset();
-            page=1;
+            page = 1;
             renderDaily();
             resolve();
         } catch (err) {
@@ -181,7 +181,7 @@ function addSelectRowsView() {
 
     const RowPreference = localStorage.getItem('userRowPreference');
     const pageLimit = document.getElementById('pageLimit');
-    if(RowPreference)
+    if (RowPreference)
         pageLimit.value = RowPreference;
     else
         pageLimit.value = '10';
@@ -190,15 +190,15 @@ function addSelectRowsView() {
 function changePageLimit() {
     const pageLimit = document.getElementById('pageLimit');
     localStorage.setItem('userRowPreference', pageLimit.value);
-    page=1;
+    page = 1;
     renderData(reportTypeBtn.innerText);
 }
 
 function removeViews() {
-    if(document.getElementById('btnsC'))
-        document.getElementById('btnsC').remove();  
+    if (document.getElementById('btnsC'))
+        document.getElementById('btnsC').remove();
 
-    if(document.getElementById('pageLimitC'))
+    if (document.getElementById('pageLimitC'))
         document.getElementById('pageLimitC').remove();
 }
 
@@ -250,9 +250,12 @@ async function renderDataDaily() {
 
     let responseData, pageData;
     try {
-         responseData = await getAllEntries(`date=${dateInput}`);
-         entries = responseData.entries;
-         pageData = responseData.pageData;
+        // responseData = await getAllEntries(`date=${dateInput}`);
+        const pageLimit = localStorage.getItem('userRowPreference');
+        result = await axiosInstance.get(`/entries/date?date=${dateInput}&page=${page}&pageLimit=${pageLimit}`, { headers: { "Authorization": token } });
+        const responseData = result.data;
+        entries = responseData.entries;
+        pageData = responseData.pageData;
     } catch (err) {
         alert('Something went wrong!');
         return;
@@ -366,18 +369,24 @@ async function renderDataMonthly() {
 
     let responseData, pageData;
     try {
-         responseData = await getAllEntries(`month=${month}`);
-         entries = responseData.entries;
-         pageData = responseData.pageData;
-    } catch(err) {
+        // responseData = await getAllEntries(`month=${month}&year=${year}`);
+        const pageLimit = localStorage.getItem('userRowPreference');
+        result = await axiosInstance.get(`/entries/month?month=${month}&year=${year}&page=${page}&pageLimit=${pageLimit}`, { headers: { "Authorization": token } });
+        const responseData = result.data;
+        entries = responseData.entries;
+        console.log(entries);
+        pageData = responseData.pageData;
+    } catch (err) {
         console.log(err);
     }
-    entries.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    entries.sort((a, b) => new Date(b.date).toISOString().split('T')[0] - new Date(a.date).toISOString().split('T')[0]);
 
     tableBody.innerHTML = '';
 
     entries.forEach(entry => {
         let currIncome, currExpense, bgColor;
+
+        const entryDate = new Date(entry.date).toISOString().split('T')[0];
 
         if (entry.entryType === 'expense') {
             currExpense = entry.amount;
@@ -394,7 +403,7 @@ async function renderDataMonthly() {
 
         tableBody.innerHTML += `
             <tr class="data-row" style="background-color: ${bgColor};">
-                <td class="data col-2">${entry.date}</td>
+                <td class="data col-2">${entryDate}</td>
                 <td class="data col-2">${entry.category}</td>
                 <td class="data col-4">${entry.description}</td>
                 <td class="income col-2">${currIncome}</td>
@@ -460,7 +469,7 @@ function renderYearly() {
 }
 
 async function renderDataYearly() {
-    if(document.getElementById('btnsC'))
+    if (document.getElementById('btnsC'))
         document.getElementById('btnsC').remove();
 
     const yearInput = document.getElementById('yearInput').value;
@@ -474,14 +483,15 @@ async function renderDataYearly() {
 
     let responseData, pageData;
     try {
-         responseData = await getAllEntries(`year=${yearInput}`);
-         entries = responseData.entries;
-         pageData = responseData.pageData;
-    } catch(err) {
+        result = await axiosInstance.get(`/entries/year?year=${yearInput}`, { headers: { "Authorization": token } });
+        const responseData = result.data;
+        entries = responseData.entries;
+        pageData = responseData.pageData;
+    } catch (err) {
         console.log(err);
     }
 
-    entries.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    entries.sort((a, b) => new Date(b.date) - new Date(a.date));
 
     const entriesTable = document.getElementById('entries-table');
     const tableBody = document.getElementById('entries-table-body');
@@ -578,9 +588,12 @@ async function renderAll() {
 
     let responseData, pageData;
     try {
-         responseData = await getAllEntries();
-         entries = responseData.entries;
-         pageData = responseData.pageData;
+        const pageLimit = localStorage.getItem('userRowPreference');
+        result = await axiosInstance.get(`/entries/all?page=${page}&pageLimit=${pageLimit}`, { headers: { "Authorization": token } });
+        const responseData = result.data;
+        entries = responseData.entries;
+        console.log(entries);
+        pageData = responseData.pageData;
     } catch (err) {
         alert('Something went wrong!');
         return;
@@ -597,6 +610,8 @@ async function renderAll() {
     entries.forEach(entry => {
         let currIncome, currExpense, bgColor;
 
+        const entryDate = new Date(entry.date).toISOString().split('T')[0];
+
         if (entry.entryType === 'expense') {
             currExpense = entry.amount;
             totalExpense += currExpense;
@@ -612,7 +627,7 @@ async function renderAll() {
 
         tableBody.innerHTML += `
             <tr style="background-color: ${bgColor};">
-                <td class="data col-2">${entry.date}</td>
+                <td class="data col-2">${entryDate}</td>
                 <td class="data col-2">${entry.category}</td>
                 <td class="data col-4">${entry.description}</td>
                 <td class="income col-2">${currIncome}</td>

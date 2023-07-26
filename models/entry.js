@@ -1,3 +1,38 @@
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
+
+const entrySchema = new Schema({
+  amount: {
+    type: Number,
+    required: true
+  },
+  description: {
+    type: String,
+    required: true
+  },
+  category: {
+    type: String,
+    required: true
+  },
+  date: {
+    type: Date,
+    required: true
+  },
+  entryType: {
+    type: String,
+    required: true
+  },
+  userId: {
+    type: Schema.Types.ObjectId,
+    required: true
+  }
+});
+
+const Entry = mongoose.model('Entry', entrySchema);
+
+module.exports = Entry;
+
+
 // const Sequelize = require('sequelize');
 
 // const sequelize = require('../util/database');
@@ -30,5 +65,3 @@
 //         allowNull: false
 //       }
 // });
-
-// module.exports = Entry;

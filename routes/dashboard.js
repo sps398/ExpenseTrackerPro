@@ -1,12 +1,18 @@
-// const entryController = require('../controllers/entry');
+const entryController = require('../controllers/entry');
 // const leaderboardController = require('../controllers/premium');
-// const userAuthentication = require('../middleware/userauthentication');
+const userAuthentication = require('../middleware/userauthentication');
 const express = require('express');
 const router = express.Router();
 
-// router.get('/Entries', userAuthentication.authenticate, entryController.getEntries);
+router.get('/entries/date', userAuthentication.authenticate, entryController.getEntriesByDate);
 
-// router.post('/add-entry', userAuthentication.authenticate, entryController.postAddEntry);
+router.get('/entries/month', userAuthentication.authenticate, entryController.getEntriesByMonth);
+
+router.get('/entries/year', userAuthentication.authenticate, entryController.getEntriesByYear);
+
+router.get('/entries/all', userAuthentication.authenticate, entryController.getAllEntries);
+
+router.post('/add-entry', userAuthentication.authenticate, entryController.postAddEntry);
 
 // router.get('/delete-entry/:id', userAuthentication.authenticate, entryController.deleteEntry);
 

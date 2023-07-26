@@ -2,7 +2,7 @@ global.__basedir = __dirname;
 
 const bodyParser = require('body-parser');
 const userRoutes = require('./routes/user');
-// const dashboardRoutes = require('./routes/dashboard');
+const dashboardRoutes = require('./routes/dashboard');
 // const premiumRoutes = require('./routes/premium');
 // const purchaseRoutes = require('./routes/purchase');
 const express = require('express');
@@ -34,7 +34,7 @@ app.use(helmet());
 app.use(morgan('combined', { stream: accessLogStream }));
 
 app.use('/user', userRoutes);
-// app.use('/', dashboardRoutes);
+app.use('/', dashboardRoutes);
 // app.use('/premium', premiumRoutes);
 // app.use('/purchase', purchaseRoutes);
 
