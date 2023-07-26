@@ -1,6 +1,6 @@
 const User = require('../models/user');
 const ForgotPasswordRequest = require('../models/forgotpasswordrequest');
-// const FilesDownloaded = require('../models/filesdownloaded');
+const FilesDownloaded = require('../models/filesdownloaded');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const SibApiV3Sdk = require('sib-api-v3-sdk');
@@ -8,7 +8,7 @@ const { v4: uuidv4 } = require('uuid');
 const mongoose = require('mongoose');
 const path = require('path');
 require('dotenv').config();
-const pageLimit=5;
+const pageLimit = 5;
 
 const postUserSignUp = async (req, res, next) => {
     try {
@@ -67,11 +67,11 @@ const forgotPassword = async (req, res, next) => {
 
     try {
         const email = req.body.email;
-    
+
         const users = await User.find({ email });
         const user = users[0];
 
-        if(!user)
+        if (!user)
             return res.status(400).json({ message: 'Incorrect Email', success: false });
 
         const requests = await ForgotPasswordRequest.find({ 'user.userId': user._id, isActive: true });
@@ -80,7 +80,7 @@ const forgotPassword = async (req, res, next) => {
 
         let request = requests[0];
 
-        if(!request) {        
+        if (!request) {
             request = new ForgotPasswordRequest({
                 user: {
                     userId: user._id,
@@ -91,17 +91,17 @@ const forgotPassword = async (req, res, next) => {
 
             request = await request.save({ session });
         }
-    
+
         var client = SibApiV3Sdk.ApiClient.instance;
-    
+
         // Configure API key authorization: api-key
         var apiKey = client.authentications['api-key'];
         apiKey.apiKey = process.env.SENDINBLUE_EMAIL_KEY;
-    
+
         var apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
-    
+
         var sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail(); // SendSmtpEmail | Values to send a transactional email
-    
+
         sendSmtpEmail = {
             sender: {
                 email: 'vispsen@gmail.com',
@@ -121,7 +121,7 @@ const forgotPassword = async (req, res, next) => {
                 'X-Mailin-custom': 'api-key:{{params.API_KEY}}|content-type:application/json|accept:application/json'
             }
         };
-    
+
         apiInstance.sendTransacEmail(sendSmtpEmail).then(async function (data) {
             await session.commitTransaction();
             session.endSession();
@@ -129,17 +129,17 @@ const forgotPassword = async (req, res, next) => {
         }, function (error) {
             throw new Error(err);
         });
-    } catch(err) {
+    } catch (err) {
         console.log(err);
         await session.abortTransaction();
-        session.endSession();       
+        session.endSession();
         return res.status(500).json({ message: 'Something went wrong!', success: false });
     }
 
 }
 
 const getResetPassword = async (req, res, next) => {
-    return res.render('reset-password', { requestId: req.params.requestId, nonce1: `nonce1 + ${Math.random()*100}`, nonce3: `nonce3 + ${Math.random()*100}`, nonce2: `nonce2 + ${Math.random()*100}` });
+    return res.render('reset-password', { requestId: req.params.requestId, nonce1: `nonce1 + ${Math.random() * 100}`, nonce3: `nonce3 + ${Math.random() * 100}`, nonce2: `nonce2 + ${Math.random() * 100}` });
 }
 
 const postUpdatePassword = async (req, res, next) => {
@@ -147,13 +147,13 @@ const postUpdatePassword = async (req, res, next) => {
     session.startTransaction();
     try {
         let newPassword = req.body.newPassword;
-    
+
         const salt = await bcrypt.genSalt(10);
         newPassword = await bcrypt.hash(newPassword, salt);
-    
+
         const request = await ForgotPasswordRequest.findById(req.params.requestId);
-    
-        await User.findByIdAndUpdate(request.user.userId, { password: newPassword }, { session } );
+
+        await User.findByIdAndUpdate(request.user.userId, { password: newPassword }, { session });
 
         request.isActive = false;
 
@@ -164,7 +164,7 @@ const postUpdatePassword = async (req, res, next) => {
 
         return res.status(200).json({ message: 'Password updated successfully!', success: true });
 
-    } catch(err) {
+    } catch (err) {
         console.log(err);
         await session.abortTransaction();
         session.endSession();
@@ -175,25 +175,24 @@ const postUpdatePassword = async (req, res, next) => {
 const getFilesDownloaded = async (req, res) => {
     try {
         const page = +req.query.page || 1;
-        const result = await FilesDownloaded.findAll({
-            where: { userId: req.user.id },
-            offset: (page-1)*pageLimit,
-            limit: pageLimit
-        });
 
-        const total = await FilesDownloaded.count({ where: { userId: req.user.id } });
+        const result = await FilesDownloaded.find({ userId: req.user.id })
+            .skip((page - 1) * pageLimit)
+            .limit(pageLimit);
+
+        const total = await FilesDownloaded.countDocuments({ userId: req.user.id });
 
         const pageData = {
             currentPage: page,
-            hasNextPage: (page*pageLimit) < total,
-            nextPage: page+1,
+            hasNextPage: (page * pageLimit) < total,
+            nextPage: page + 1,
             hasPreviousPage: (page > 1),
-            previousPage: page-1,
-            lastPage: Math.ceil(total/pageLimit)
+            previousPage: page - 1,
+            lastPage: Math.ceil(total / pageLimit)
         }
 
         return res.status(200).json({ filesData: result, pageData: pageData, success: true });
-    } catch(err) {
+    } catch (err) {
         console.log(err);
         return res.status(500).json({ success: false, err: err });
     }

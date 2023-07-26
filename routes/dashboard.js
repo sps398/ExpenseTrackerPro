@@ -1,5 +1,4 @@
 const entryController = require('../controllers/entry');
-// const leaderboardController = require('../controllers/premium');
 const userAuthentication = require('../middleware/userauthentication');
 const express = require('express');
 const router = express.Router();

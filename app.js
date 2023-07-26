@@ -3,17 +3,12 @@ global.__basedir = __dirname;
 const bodyParser = require('body-parser');
 const userRoutes = require('./routes/user');
 const dashboardRoutes = require('./routes/dashboard');
-// const premiumRoutes = require('./routes/premium');
-// const purchaseRoutes = require('./routes/purchase');
+const premiumRoutes = require('./routes/premium');
+const purchaseRoutes = require('./routes/purchase');
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const cors = require('cors');
-// const Entry = require('./models/entry');
-const User = require('./models/user');
-const ForgotPasswordRequests = require('./models/forgotpasswordrequest');
-// const FilesDownloaded = require('./models/filesdownloaded');
-// const Order = require('./models/order');
 const Razorpay = require('razorpay');
 const ejs = require('ejs');
 const helmet = require('helmet');
@@ -35,37 +30,17 @@ app.use(morgan('combined', { stream: accessLogStream }));
 
 app.use('/user', userRoutes);
 app.use('/', dashboardRoutes);
-// app.use('/premium', premiumRoutes);
-// app.use('/purchase', purchaseRoutes);
+app.use('/premium', premiumRoutes);
+app.use('/purchase', purchaseRoutes);
 
-// app.use('/', (req, res) => {
-//     res.redirect('/dashboard/expense.html');
-// })
+app.use('/', (req, res) => {
+    res.redirect('/dashboard/expense.html');
+})
 
 app.use((req, res) => {
     console.log(req.url);
     res.sendFile(path.join(__dirname, `public/${req.url}`));
 });
-
-// User.hasMany(Entry);
-// Entry.belongsTo(User);
-
-// User.hasMany(Order);
-// Order.belongsTo(User);
-
-// User.hasMany(ForgotPasswordRequests);
-// ForgotPasswordRequests.belongsTo(User);
-
-// User.hasMany(FilesDownloaded);
-// FilesDownloaded.belongsTo(User);
-
-// sequelize
-//     .sync()
-//     .then(result => {
-//         const port = process.env.PORT || 3000;
-//         app.listen(port);
-    // })
-    // .catch(err => console.log(err));
 
 mongoose.connect(process.env.DB_CONN_STRING)
     .then(result => {
