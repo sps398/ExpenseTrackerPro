@@ -289,7 +289,7 @@ async function renderDataDaily() {
                 <td class="data col-4">${entry.description}</td>
                 <td class="income col-2">${currIncome}</td>
                 <td class="expense col-2">${currExpense}</td>
-                <td class="deleteC center text-dark col-1"><i id="${entry.id}" class="delete fa-solid fa-trash" onclick=deleteEntry(this.id)></i></td>
+                <td class="deleteC center text-dark col-1"><i id="${entry._id}" class="delete fa-solid fa-trash" onclick=deleteEntry(this.id)></i></td>
             </tr>
         `;
     })
@@ -698,6 +698,6 @@ async function downloadFile() {
 
 
 async function deleteEntry(id) {
-    await axiosInstance.get(`/delete-entry/${id}`, { headers: { "Authorization": token } });
+    await axiosInstance.delete(`/delete-entry/${id}`, { headers: { "Authorization": token } });
     renderData('Daily');
 }

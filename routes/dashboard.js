@@ -14,8 +14,8 @@ router.get('/entries/all', userAuthentication.authenticate, entryController.getA
 
 router.post('/add-entry', userAuthentication.authenticate, entryController.postAddEntry);
 
-// router.get('/delete-entry/:id', userAuthentication.authenticate, entryController.deleteEntry);
+router.delete('/delete-entry/:id', userAuthentication.authenticate, entryController.deleteEntry);
 
-// router.get('/download/', userAuthentication.authenticate, entryController.downloadEntries);
+router.get('/download/', userAuthentication.authenticate, entryController.downloadEntries);
 
 module.exports = router;

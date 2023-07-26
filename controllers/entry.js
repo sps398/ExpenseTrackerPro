@@ -2,7 +2,7 @@ const Entry = require('../models/entry');
 const User = require('../models/user');
 const UserServices = require('../services/userservices');
 const S3Services = require('../services/s3services');
-// const FilesDownloaded = require('../models/filesdownloaded');
+const FilesDownloaded = require('../models/filesdownloaded');
 const mongoose = require('mongoose');
 const AWS = require('aws-sdk');
 require('dotenv').config();
@@ -264,17 +264,21 @@ const postAddEntry = async (req, res, next) => {
 }
 
 const deleteEntry = async (req, res, next) => {
-    const t = await sequelize.transaction();
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
     try {
         const entryId = req.params.id;
 
-        if (entryId == undefined || entryId.length === 0)
+        if (entryId === undefined || entryId.length === 0)
             return res.status(400).json({ message: 'Bad request', success: false });
 
         const user = req.user;
 
-        const entries = await user.getEntries({ where: { id: entryId } });
-        const entry = entries[0];
+        const entry = await Entry.findOneAndDelete({ _id: entryId }).session(session);
+        
+        if(!entry)
+            return res.status(404).json({ success: false, message: 'Entry not found!' });   
 
         if (entry.entryType === 'expense')
             user.totalExpense = Number(user.totalExpense) - Number(entry.amount);
@@ -283,23 +287,23 @@ const deleteEntry = async (req, res, next) => {
 
         user.totalSavings = Number(user.totalIncome) - Number(user.totalExpense);
 
-        await entry.destroy({ transaction: t });
+        await user.save({ session });
 
-        await user.save({ transaction: t });
-
-        await t.commit();
+        await session.commitTransaction();
+        session.endSession();
 
         return res.status(200).json({ success: true });
     } catch (err) {
         console.log(err);
-        await t.rollback();
+        await session.abortTransaction();
+        session.endSession();
         return res.status(500).json({ message: "Some error occurred", success: false });
     }
 }
 
 const downloadEntries = async (req, res) => {
     try {
-        const entries = await UserServices.getEntries(req);
+        const entries = await Entry.find({ userId: req.user._id });
         if (entries.length === 0)
             return res.status(404).json({ message: 'No entries to download', success: false });
         const stringifiedEntries = JSON.stringify(entries);
@@ -307,11 +311,13 @@ const downloadEntries = async (req, res) => {
         const filename = `Entry${req.user.id}/${dateDownloaded}.txt`;
         const fileUrl = await S3Services.uploadToS3(stringifiedEntries, filename);
 
-        await FilesDownloaded.create({
+        const newFile = new FilesDownloaded({
             fileUrl: fileUrl,
             dateDownloaded: dateDownloaded,
-            userId: req.user.id
+            userId: req.user._id
         });
+
+        await newFile.save();
 
         return res.status(200).json({ fileUrl: fileUrl, success: true });
     } catch (err) {
