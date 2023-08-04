@@ -146,7 +146,7 @@ formAddIncome.addEventListener('submit', async (e) => {
 async function postEntryAndUpdate(data, form) {
     return new Promise(async (resolve, reject) => {
         try {
-            await axiosInstance.post('/add-entry', data, { headers: { "Authorization": token } });
+            await axiosInstance.post('/entries', data, { headers: { "Authorization": token } });
             form.reset();
             page = 1;
             renderDaily();
@@ -683,7 +683,7 @@ function getAllEntries(query) {
 
 async function downloadFile() {
     try {
-        const response = await axiosInstance.get('/download', { headers: { 'Authorization': token } });
+        const response = await axiosInstance.get('/entries/downloadAll', { headers: { 'Authorization': token } });
         if (response.data.success) {
             const z = document.createElement('a');
             z.href = response.data.fileUrl;
@@ -698,6 +698,6 @@ async function downloadFile() {
 
 
 async function deleteEntry(id) {
-    await axiosInstance.delete(`/delete-entry/${id}`, { headers: { "Authorization": token } });
+    await axiosInstance.delete(`/entries/${id}`, { headers: { "Authorization": token } });
     renderData('Daily');
 }

@@ -11,10 +11,12 @@ router.get('/entries/year', userAuthentication.authenticate, entryController.get
 
 router.get('/entries/all', userAuthentication.authenticate, entryController.getAllEntries);
 
-router.post('/add-entry', userAuthentication.authenticate, entryController.postAddEntry);
+router.post('/entries', userAuthentication.authenticate, entryController.postAddEntry);
 
-router.delete('/delete-entry/:id', userAuthentication.authenticate, entryController.deleteEntry);
+router.delete('/entries/:id', userAuthentication.authenticate, entryController.deleteEntry);
 
-router.get('/download/', userAuthentication.authenticate, entryController.downloadEntries);
+// router.put('/entries/:id', userAuthentication.authenticate, entryController.editEntry);
+
+router.get('/entries/downloadAll/', userAuthentication.authenticate, entryController.downloadEntries);
 
 module.exports = router;
