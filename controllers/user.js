@@ -138,6 +138,7 @@ const forgotPassword = async (req, res, next) => {
 }
 
 const getResetPassword = async (req, res, next) => {
+    res.set("Content-Security-Policy", "default-src *; style-src 'self' http://* 'unsafe-inline'; script-src 'self' http://* 'unsafe-inline' 'unsafe-eval'");
     return res.render('reset-password', { requestId: req.params.requestId });
 }
 
