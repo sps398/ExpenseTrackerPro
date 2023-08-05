@@ -26,7 +26,7 @@ const app = express();
 const accessLogStream = fs.createWriteStream(path.join(__dirname, 'access.log'), { flags: 'a' });
 
 app.set('view engine', 'ejs');
-app.set('views', path.join(__basedir, 'views', '/auth'));
+app.set('views', path.join(__basedir, 'views'       ));
 app.use(bodyParser.json({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(cors());

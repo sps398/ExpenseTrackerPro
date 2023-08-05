@@ -127,6 +127,8 @@ const forgotPassword = async (req, res, next) => {
         }, function (error) {
             throw new Error(err);
         });
+
+        return res.status(200).json({ success: true, message: 'Successfully sent email!' });
     } catch(err) {
         await t.rollback();       
         console.log(err);
